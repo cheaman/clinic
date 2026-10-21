@@ -243,7 +243,7 @@ svg .anim-exam{transform-box:fill-box;transform-origin:50% 90%;animation:nod 1.6
 <!-- ===== [2] HTML ===== -->
 <div class="bar">
   <span class="logo">🏥 메타버스 보건실</span>
-  <span class="who">🙂 <span id="nick">쩐찌</span><em>별명</em></span>
+  <span class="who">🙂 <span id="nick">나</span><em>별명</em></span>
   <div class="right">
     <span class="pill" id="verPill" onclick="openSet()" style="cursor:pointer" title="누르면 바뀐 것 표"></span>
     <span class="pill ai" id="aiPill">선생님 = AI 답 붙여넣기</span>
@@ -377,8 +377,8 @@ svg .anim-exam{transform-box:fill-box;transform-origin:50% 90%;animation:nod 1.6
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-21 22:45";
-const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-21 22:55";
+const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
 const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
@@ -412,7 +412,7 @@ let view = "front", page = 1, tl = "d3", busy = false, selCase = null;
 
 function load(){
   let d = {}; try{ d = JSON.parse(localStorage.getItem(KEY) || "{}"); }catch(e){}
-  d.cases = d.cases || []; d.nextId = d.nextId || 1; d.settings = Object.assign({nick:"쩐찌", key:"", model:"claude-sonnet-5-5", test:false}, d.settings || {});
+  d.cases = d.cases || []; d.nextId = d.nextId || 1; d.settings = Object.assign({nick:"나", key:"", model:"claude-sonnet-5-5", test:false}, d.settings || {});
   d.settings.av = Object.assign({sex:"girl", hair:"long", hairc:"#3b2a20", skin:"#ffd9b8", top:"#f1e6cf", glasses:false, fit:"uniform", acc:"none", eyec:"#3b7dd8", shoe:"#3a2a22", bot:""}, d.settings.av || {});   // 아바타 꾸미기 (v0.3 · v0.6 옷 종류 · 소품 · 눈 · 신발 · 아래 색)
   d.settings.ai = d.settings.ai || "GPT";   // 마지막에 물은 AI 이름 (v0.5)
   d.settings.say = d.settings.say !== false;   // 🔊 읽어 주기 + 효과음 (v0.6 · 35번에서)
@@ -1121,7 +1121,7 @@ function saveKey(){ const k = $("keyIn").value.trim(); if(!k) return toast("열�
 function clearKey(){ D.settings.key = ""; save(); openSet(); drawTop(); toast("열쇠를 지웠어요"); }
 $("modelIn").onchange = e => { D.settings.model = e.target.value; save(); };
 $("testIn").onchange = e => { D.settings.test = e.target.checked; save(); drawTop(); };
-$("nickIn").oninput = e => { D.settings.nick = e.target.value.trim() || "쩐찌"; save(); $("nick").textContent = D.settings.nick; };
+$("nickIn").oninput = e => { D.settings.nick = e.target.value.trim() || "나"; save(); $("nick").textContent = D.settings.nick; };
 $("symText").oninput = e => { cur.text = e.target.value; };
 
 /* 시작 — #m=열쇠 (QR) 는 저장하고 주소에서 지움 */
@@ -1129,6 +1129,7 @@ $("symText").oninput = e => { cur.text = e.target.value; };
   const m = location.hash.match(/#m=([^&]+)/); if(m){ D.settings.key = decodeURIComponent(m[1]); save(); history.replaceState(null,"",location.pathname+location.search); toast("QR 열쇠를 이 기기에 저장했어요"); }
   if("serviceWorker" in navigator){ if(location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{}); else navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
   drawTop(); go(1);
+  if(!D.settings.nickSet){ D.settings.nickSet = true; save(); setTimeout(() => toast("⚙ 설정에서 별명을 정해요 — 이름 · 학번은 쓰지 않아요"), 1800); }   // 처음 한 번만 (v0.6o)
 })();
 </script>
 </body>

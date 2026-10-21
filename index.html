@@ -56,6 +56,8 @@ button{font:inherit;cursor:pointer}
 .body{flex:1;display:flex;min-height:0}
 .page{display:none;flex:1;min-height:0}
 .page.on{display:flex}
+.stick{position:sticky;bottom:0;margin:auto -18px 0;padding:8px 18px 6px;background:#fbfcfd;border-top:1px solid var(--line);z-index:2;display:flex;flex-direction:column;gap:7px}
+.stick .row{margin:0}
 .scene{flex:0 0 50%;position:relative;overflow:hidden;background:var(--wall)}
 .scene svg{display:block;width:100%;height:100%}
 #p1 .scene{flex:0 0 63%}
@@ -333,8 +335,8 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
         <button class="b sm" id="frontBtn" onclick="setView('front')">앞</button><button class="b sm" id="backBtn" onclick="setView('back')">뒤</button>
         <span class="hint">등 · 허리 · 엉덩이는 「뒤」 에서</span>
       </div>
-      <div class="row" id="nextSpotRow" style="display:none"><button class="big mint" style="margin:0;flex:1" onclick="doneSpot()">✔ 이 곳 다 적었어요 — 저장</button></div>
-      <button class="big" id="toTeacher" onclick="askTeacher()">👩‍⚕️ 선생님에게 보여 주기</button>
+      <div class="stick"><div class="row" id="nextSpotRow" style="display:none"><button class="big mint" style="margin:0;flex:1" onclick="doneSpot()">✔ 이 곳 다 적었어요 — 저장</button></div>
+      <button class="big" id="toTeacher" style="margin:0" onclick="askTeacher()">👩‍⚕️ 선생님에게 보여 주기</button></div>
     </div>
   </section>
 
@@ -409,8 +411,8 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-22 01:10";
-const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-22 06:40";
+const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 사람처럼 눌러 본 뒤(06:30) — ② 「✔ 저장」 단추 · ④ 아래 줄이 옆 판 바닥에 붙박이(스크롤 없이 보임) · 사례 저장 뒤 단추가 「⑤ 탐구 벽 보기」 로 · 붙여 넣기 안내에 1달 · 3달 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
 const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
@@ -1035,7 +1037,7 @@ function drawPred(){
     <div class="card"><h3><span class="no">${names[tl]}</span>${place[tl]} · 디지털 트윈은 이렇게</h3><div class="kv"><span>몸</span><b>${esc(tlText(tl))}</b></div><div class="kv"><span>할 것</span><b>${esc(tip)}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
     <div class="card"><h3><span class="no">💡</span>지금 할 수 있는 것</h3><div class="hint">${esc(care.join(" · "))}</div><div class="hint" style="color:#8a1f17;margin-top:4px">빨강 신호 : ${esc((a.red||[]).join(" · "))}</div></div>
     <div class="hint">답한 것 : ${esc(a.model)} · ${fmt(a.at)}</div>
-    <div class="row" style="margin-top:auto"><button class="big" style="margin:0;flex:1" onclick="saveCase()" ${cur.id?"disabled":""}>${cur.id?"📌 사례 "+cur.id+"번으로 저장됨":"📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🔄 처음부터</button>`:""}</div>`;
+    <div class="row stick"><button class="big" style="margin:0;flex:1" onclick="${cur.id?"go(5)":"saveCase()"}">${cur.id?"📌 사례 "+cur.id+"번 저장됨 · ⑤ 탐구 벽 보기":"📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🔄 처음부터</button>`:""}</div>`;
 }
 // AI 에게 묻기 상자 — ① 질문 글 복사 · AI 열기 ② 답 붙여 넣기 → 읽어서 디지털 트윈에 (전무님 10-21 «무료 AI · GPT 익숙 · 질문 글 만들어 주고 답을 받아 넣는 꼴»)
 let askDraft = "", needColor = false;
@@ -1054,11 +1056,11 @@ function drawAsk(S, P){
       <details style="margin-top:8px"><summary class="b sm dim" style="list-style:none;display:inline-block;cursor:pointer">👁 질문 글 미리 보기 (누르면 펼침)</summary><pre style="white-space:pre-wrap;font:13px/1.5 'Noto Sans KR';background:#f6f8fb;border-radius:8px;padding:8px;margin:6px 0 0;max-height:180px;overflow:auto">${esc(askText(cur))}</pre></details></div>
     <div class="card"><h3><span class="no">2</span>AI 답을 통째로 붙여 넣어요</h3>
       <div class="row"><span class="hint">누가 답했나</span>${["GPT","제미나이","클로드","그 밖"].map(chip).join("")}</div>
-      <textarea id="ansIn" rows="7" placeholder="AI 답을 그대로 붙여 넣어요 — 예상 · 긴급도 · 까닭 · 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 · 할 것 · 빨강 신호" oninput="askDraft=this.value" style="margin-top:6px">${esc(askDraft)}</textarea>
+      <textarea id="ansIn" rows="7" placeholder="AI 답을 그대로 붙여 넣어요 — 예상 · 긴급도 · 까닭 · 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 · 1달 뒤 · 3달 뒤 · 할 것 · 빨강 신호" oninput="askDraft=this.value" style="margin-top:6px">${esc(askDraft)}</textarea>
       ${needColor ? `<div class="row" style="margin-top:6px"><span class="hint" style="color:#8a1f17">긴급도 색을 못 찾았어요 — AI 가 말한 색을 골라요</span>${COLORS.map(c=>`<button class="b sm" onclick="readAnswer('${c}')">${c}</button>`).join("")}</div>` : ""}
       <div class="row" style="margin-top:8px"><button class="big" style="margin:0;flex:1" onclick="readAnswer()">🔎 읽어서 디지털 트윈에 넣기</button></div>
       <div class="hint" style="margin-top:4px">못 읽은 줄은 「—」 · 긴급도 색(초록/노랑/빨강)만 꼭 · 답은 사례에 그대로 남아요</div></div>
-    <div class="row" style="margin-top:auto"><button class="b dim" onclick="useTest()">시험 답으로 보기 (연습)</button>${hasKey()?`<button class="b" onclick="directAsk()">⚡ 클로드 열쇠로 바로 묻기</button>`:""}<button class="b dim" onclick="go(3)">↩ 되묻기로</button></div>`;
+    <div class="row stick" style="flex-direction:row"><button class="b dim" onclick="useTest()">시험 답으로 보기 (연습)</button>${hasKey()?`<button class="b" onclick="directAsk()">⚡ 클로드 열쇠로 바로 묻기</button>`:""}<button class="b dim" onclick="go(3)">↩ 되묻기로</button></div>`;
 }
 // 질문 글 — 어느 AI 에 붙여 넣어도 같은 9줄 꼴로 답하게
 function askText(c){

@@ -1,0 +1,1029 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1d1d1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="보건실">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>메타버스 보건실</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<!--
+  메타버스 보건실 — 동아리 탐구 「AI는 보건실 선생님이 될 수 있을까?」 시험용 프로그램
+  v0.3 · 만든 날 2026-10-21 17:10 · 고친 날 2026-10-21 20:30 · 57번 폴더 · 3_앱\index.html
+  뼈대 : 35번 바질키우기 패드 틀 (위 띠 · 왼쪽 장면 + 오른쪽 판 · 띠 · 아래 탭)
+  ─────────────────────────────────────────────────────────────
+  구역 지도 (고칠 때 여기서 찾아 내려감)
+    [1] CSS — 틀 · 장면 · 판 · 단추 · 탐구 벽 · 폰 접힘
+    [2] HTML — 위 띠 · 다섯 화면(p1 보건실 · p2 몸 쌍둥이 · p3 선생님 · p4 앞날 예측 · p5 탐구 벽) · 띠 · 탭 · 설정 창
+    [3] JS 자료 — 저장(localStorage clinic57) · 사례 규격(3_앱\규격.md) · 시험 답
+    [4] JS 화면 — 그리기 함수(draw*) · 몸 쌍둥이 SVG · 예측 그림
+    [5] JS AI — 클로드 API(브라우저 직접) · 되묻기 · 예측 · JSON 풀기
+    [6] JS 탐구 벽 — 사례 카드 · 실제 · 세 AI · 점수 · 성적표 · 복사 · 파일
+  지키는 것 : ① 띠 「의사 진단이 아닙니다」 늘 보임 ② 애매하면 빨강 ③ 이름 · 학번 · 학교 칸 없음 ④ 열쇠는 localStorage 에만
+-->
+<style>
+/* ===== [1] CSS ===== */
+:root{
+  --ink:#1f2630; --sub:#5f6b78; --bg:#f1f5fa; --card:#fff; --line:#dbe3ec;
+  --blue:#2457c5; --blue2:#e8eefb; --mint:#1fa796; --mint2:#e3f6f3;
+  --g:#1e9e5a; --gbg:#e4f5ea; --y:#e0a100; --ybg:#fff6d9; --r:#d93025; --rbg:#fde8e6;
+  --wall:#dff0ff; --floor:#f3e6d2; --wood:#c9a37a;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation;-webkit-text-size-adjust:100%}
+*{-webkit-tap-highlight-color:transparent}
+.scene svg,.nav,.bar{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+button{font:inherit;cursor:pointer}
+.app{height:100%;display:flex;flex-direction:column}
+/* 위 띠 */
+.bar{height:64px;flex:0 0 64px;display:flex;align-items:center;gap:12px;padding:0 18px;background:#fff;border-bottom:1px solid var(--line)}
+.bar .logo{font:24px "Jua";color:var(--blue);white-space:nowrap}
+.bar .who{font:18px "Jua";white-space:nowrap}
+.bar .who em{font-style:normal;background:#eef2f7;border-radius:999px;padding:3px 10px;font:14px "Jua";color:var(--sub);margin-left:4px}
+.bar .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pill{border:0;border-radius:999px;padding:5px 12px;font:15px "Jua";background:#eef2f7;color:var(--sub);white-space:nowrap}
+.pill.ai{background:var(--mint2);color:#0f6f63}
+.pill.n{background:#fff6d6;border:1px solid #f1d47a;color:#8a6400}
+.pill.warn{background:var(--rbg);color:#8a1f17}
+/* 본문 */
+.body{flex:1;display:flex;min-height:0}
+.page{display:none;flex:1;min-height:0}
+.page.on{display:flex}
+.scene{flex:0 0 50%;position:relative;overflow:hidden;background:var(--wall)}
+.scene svg{display:block;width:100%;height:100%}
+#p1 .scene{flex:0 0 63%}
+#p1 .side{padding:10px 12px;gap:7px}
+#p1 .side h2{font-size:19px}
+#p1 .gbtn{font-size:15px;padding:8px 4px}
+.bubble.me{background:#e7f0ff}.bubble.me:after{right:auto;left:40px;border-top-color:#e7f0ff}
+.lbl{position:absolute;background:rgba(34,38,43,.86);color:#fff;font:14px "Jua";padding:4px 10px;border-radius:10px;pointer-events:none}
+.lbl.me{background:var(--blue)}.lbl.tw{background:var(--mint)}
+.bubble{position:absolute;background:#fff;border-radius:18px;padding:10px 16px;font:18px/1.35 "Jua";box-shadow:0 4px 14px rgba(0,0,0,.12);max-width:46%}
+.bubble:after{content:"";position:absolute;right:40px;bottom:-14px;border:8px solid transparent;border-top:10px solid #fff}
+.side{flex:1;padding:12px 18px;display:flex;flex-direction:column;gap:9px;background:#fbfcfd;border-left:1px solid var(--line);min-width:0;overflow:auto}
+.side h2{font:22px "Jua";margin:0}
+.side h2 small{font:13px "Noto Sans KR";color:var(--sub);margin-left:8px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px}
+.card h3{font:17px "Jua";margin:0 0 6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card h3 .no{flex:0 0 28px;height:28px;border-radius:50%;background:var(--blue2);color:var(--blue);display:flex;align-items:center;justify-content:center;font:16px "Jua"}
+.card h3 .no.m{background:var(--mint2);color:#0f6f63}
+.card h3 .hint{font-weight:400}
+.b{display:inline-block;border:0;border-radius:12px;padding:7px 14px;font:17px "Jua";background:var(--blue2);color:var(--blue);margin:3px 4px 3px 0}
+.b.sel{background:var(--blue);color:#fff}
+.b.mint{background:var(--mint2);color:#0f6f63}.b.mint.sel{background:var(--mint);color:#fff}
+.b.dim{background:#eef0f3;color:#8a929c}
+.b.sm{font-size:14px;padding:5px 10px}
+.chiprow{display:flex;gap:6px;align-items:flex-start;margin:1px 0}
+.chiprow .cl{flex:0 0 72px;font:14px "Jua";color:var(--sub);padding-top:9px;white-space:nowrap}
+.chiprow .cs{flex:1;min-width:0}
+.chiprow .b{min-width:62px;text-align:center}
+.sw{display:inline-block;width:26px;height:26px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line);margin:2px 3px;cursor:pointer;vertical-align:middle}
+.sw.sel{box-shadow:0 0 0 3px var(--blue)}
+.avrow{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin:2px 0}.avrow .cl{flex:0 0 50px;font:14px "Jua";color:var(--sub)}
+.big{width:100%;border:0;border-radius:16px;padding:13px;font:22px "Jua";background:var(--blue);color:#fff;text-align:center;margin-top:auto}
+.big.mint{background:var(--mint)}
+.big.sub{background:var(--blue2);color:var(--blue)}
+.big:disabled{background:#cfd6dd;color:#fff;cursor:default}
+.hint{font-size:13.5px;color:var(--sub)}
+.bub{max-width:95%;padding:9px 13px;border-radius:16px;font:16px/1.4 "Noto Sans KR";margin:3px 0}
+.bub.ai{background:#eef1f5;border-bottom-left-radius:4px}
+.bub.me{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
+.who{font-size:12.5px;color:var(--sub);margin-top:3px}
+textarea,input[type=text],select{font:16px "Noto Sans KR";border:1px solid var(--line);border-radius:10px;padding:8px 10px;width:100%;background:#fff;color:var(--ink)}
+textarea{resize:vertical;min-height:54px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.gbtn{border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center;font:17px "Jua";background:#fff;color:var(--ink)}
+.gbtn i{display:block;font-style:normal;font-size:28px}
+.gbtn.mint{background:var(--mint2);border-color:var(--mint);color:#0f6f63}
+/* 신호등 · 시간 줄 */
+.light{display:flex;align-items:center;gap:12px}
+.light .dots{display:flex;gap:6px}
+.light .dots i{display:block;width:26px;height:26px;border-radius:50%;opacity:.2}
+.light .dots i.g{background:var(--g)}.light .dots i.y{background:var(--y)}.light .dots i.r{background:var(--r)}
+.light .dots i.on{opacity:1;box-shadow:0 0 0 4px rgba(0,0,0,.07)}
+.light b{font:22px "Jua"}
+.c-초록{background:var(--gbg);border-color:#b7e0c6}.c-노랑{background:var(--ybg);border-color:#efd27a}.c-빨강{background:var(--rbg);border-color:#f1b2ab}
+.time{display:flex;margin:2px 0}
+.time div{flex:1;text-align:center;font:15px "Jua";color:var(--sub);position:relative;padding-top:20px;cursor:pointer}
+.time div:before{content:"";position:absolute;left:0;right:0;top:8px;height:4px;background:#d3dae3}
+.time div:after{content:"";position:absolute;left:50%;top:2px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#d3dae3}
+.time div.on{color:var(--ink)}
+.time div.on:after{background:var(--blue);box-shadow:0 0 0 4px #c9d7f5}
+.time div.done:before,.time div.done:after{background:var(--blue)}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.kv:last-child{border-bottom:0}
+.kv b{font-weight:600;text-align:right}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+.tag.y,.tag.노랑{background:var(--ybg);color:#7a5600}.tag.r,.tag.빨강{background:var(--rbg);color:#8a1f17}.tag.g,.tag.초록{background:var(--gbg);color:#136b3c}.tag.b{background:var(--blue2);color:var(--blue)}.tag.x{background:#eef0f3;color:#8a929c}
+/* 탐구 벽 */
+.wall{flex:1;display:grid;grid-template-columns:1.1fr 1fr;gap:14px;padding:14px 18px;background:linear-gradient(#f6f1e4,#efe7d4);min-height:0;overflow:auto}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:12px 16px;min-height:0;overflow:auto}
+.panel h3{font:20px "Jua";margin:0 0 8px}
+.posters{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:9px}
+.poster{background:#fffdf4;border:1px solid #e9dca6;border-radius:10px;padding:10px 9px;font-size:13px;box-shadow:3px 4px 0 #e2d6a0;position:relative;cursor:pointer}
+.poster:before{content:"";position:absolute;left:50%;top:-6px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#d93025}
+.poster.on{outline:3px solid var(--blue)}
+.poster b{display:block;font:17px "Jua";margin:3px 0 2px}
+.poster .sc{font:26px "Jua";display:block;margin-top:4px;color:var(--blue)}
+.poster .sc.bad{color:var(--r)}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.cmp .c{border:1px solid var(--line);border-radius:12px;padding:9px 11px;font-size:13.5px}
+.cmp .c h4{margin:0 0 5px;font:16px "Jua"}
+.cmp .c.ai h4{color:var(--blue)}.cmp .c.real h4{color:#1e7a4b}
+.cmp .c p{margin:2px 0}.cmp .c p b{color:var(--sub);font-weight:600;margin-right:4px}
+.cmp .c input,.cmp .c select{font-size:14px;padding:5px 8px;margin:2px 0}
+table.rep{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+table.rep th{background:#eef0f3;color:#4a5158;font-weight:600;padding:6px 7px;border-bottom:1px solid var(--line);text-align:left}
+table.rep td{padding:6px 7px;border-bottom:1px solid var(--line)}
+table.rep td.n,table.rep th.n{text-align:right}
+.scores{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.scores label{font-size:13px;color:var(--sub)}
+.scores input{width:100%;font:18px "Jua";text-align:right;border:1px solid var(--line);border-radius:10px;padding:5px 8px}
+/* 띠 · 탭 */
+.warn{height:32px;flex:0 0 32px;display:flex;align-items:center;justify-content:center;background:#fff3f2;border-top:1px solid #f1c7c3;color:#8a1f17;font:14px "Jua";white-space:nowrap;overflow:hidden;padding:0 10px}
+.nav{height:calc(66px + env(safe-area-inset-bottom));flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:#fff;padding-bottom:env(safe-area-inset-bottom)}
+.nav button{flex:1;border:0;background:none;display:flex;align-items:center;justify-content:center;font:17px "Jua";color:#8c968f;gap:7px}
+.nav button.on{color:var(--blue);background:var(--blue2)}
+.nav i{font-style:normal;font-size:21px}
+/* 알림 · 창 */
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:#22302a;color:#fff;border-radius:999px;padding:9px 18px;font:16px "Jua";opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;z-index:40}
+.toast.on{opacity:1}
+.modal{position:fixed;inset:0;background:rgba(30,40,34,.45);display:none;align-items:center;justify-content:center;z-index:30;padding:14px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:22px;padding:20px 24px;width:100%;max-width:640px;max-height:92vh;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.25)}
+.modal h2{font:24px "Jua";margin:0 0 8px}
+.modal .kv{font-size:14px}
+.ver{font-size:12px;color:#8a929c;margin-top:10px}
+.ver table{font-size:12px;border-collapse:collapse;margin-top:4px}
+.ver td{border:1px solid #e3e8ef;padding:2px 6px}
+.busy{display:inline-block;width:18px;height:18px;border:3px solid #cfd8e8;border-top-color:var(--blue);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* 몸 쌍둥이 SVG */
+.part{fill:#e8f7ff;stroke:#1fa796;stroke-width:5;cursor:pointer;transition:fill .15s}
+.part:hover{fill:#d2f1ec;stroke-width:8}
+.part.on{fill:#ffe1de;stroke:#d93025}
+.dot{fill:#1fa796;opacity:.5;pointer-events:none}
+/* ===== 움직임 (아이들이 좋아하게 · 전무님 10-21) — 가볍게 CSS 만 ===== */
+@keyframes pagein{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes nod{0%,100%{transform:rotate(0)}30%{transform:rotate(-4deg)}70%{transform:rotate(4deg)}}
+/* 걷기 — 같은 요소에 두 animation 이 transform 을 다투면 뒤 것만 보임(v0.2 함정) → 걸음 통통을 한 keyframe 에 합침 */
+@keyframes walkin{0%{transform:translate(-160px,0)}25%{transform:translate(-120px,-6px)}50%{transform:translate(-80px,0)}75%{transform:translate(-40px,-6px)}100%{transform:translate(0,0)}}
+@keyframes step{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(2deg)}}
+@keyframes breathe{0%,100%{opacity:.75;transform:scale(1)}50%{opacity:1;transform:scale(1.03)}}
+@keyframes hurt{0%,100%{stroke-width:5;filter:drop-shadow(0 0 0 rgba(217,48,37,0))}50%{stroke-width:9;filter:drop-shadow(0 0 10px rgba(217,48,37,.8))}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes sway{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes glow{0%,100%{opacity:.8}50%{opacity:1;filter:drop-shadow(0 0 14px #ffcf4a)}}
+@keyframes bounce{0%,100%{transform:translateY(0)}40%{transform:translateY(-8px)}}
+@keyframes fall{0%{transform:translateY(-20px) rotate(0);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+@keyframes dots{0%{content:"·"}33%{content:"· ·"}66%{content:"· · ·"}}
+.page.on{animation:pagein .35s ease-out}
+.bubble{animation:pop .4s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:.5s}
+.lbl{animation:pagein .5s .3s both}
+svg .anim-teacher{transform-box:fill-box;transform-origin:50% 90%;animation:nod 4s ease-in-out infinite}
+svg .anim-teacher.busy{animation:nod 1.1s ease-in-out infinite}
+svg .anim-me{transform-box:fill-box;transform-origin:50% 100%;animation:walkin 1.2s ease-out both}
+svg .anim-me.idle{animation:bob 3s ease-in-out infinite}
+svg .anim-twin{transform-box:fill-box;transform-origin:center;animation:breathe 2.6s ease-in-out infinite;cursor:pointer}
+svg .anim-plant{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.5s ease-in-out infinite}
+svg .anim-sun{transform-box:fill-box;transform-origin:center;animation:glow 4s ease-in-out infinite}
+.part.on{animation:hurt 1.2s ease-in-out infinite}
+/* .part 에 transform-origin 을 두면 팔의 rotate(14 220 176) 기준점이 밀려 팔이 엉뚱한 자리에 감 (v0.2 함정 · 10-21) → 커짐 대신 선 굵기 */
+.bub{animation:pagein .35s ease-out both}
+.thinking:after{content:"· · ·";display:inline-block;width:2em;animation:dots 1s steps(1) infinite}
+.light .dots i.on{animation:blink 1.4s ease-in-out infinite}
+.time div.on:after{animation:bounce .6s ease-out}
+.predfig{transform-box:fill-box;transform-origin:center;animation:pop .45s ease-out both}
+/* 침대 — 걸어가 눕고 선생님이 와서 진찰 (전무님 10-21) */
+@keyframes gobed{0%{transform:translate(0,0)}25%{transform:translate(82px,-12px)}50%{transform:translate(165px,-13px)}75%{transform:translate(248px,-26px)}100%{transform:translate(330px,-26px)}}
+@keyframes goto{to{transform:translate(var(--dx),var(--dy))}}
+svg .anim-me.goto{animation:goto 1.2s ease-in-out both}
+svg .anim-teacher.tgoto{animation:goto 1.2s ease-in-out both}
+svg .anim-lie{transform-box:fill-box;transform-origin:center;animation:pop .5s ease-out both}
+svg .anim-exam{transform-box:fill-box;transform-origin:50% 90%;animation:nod 1.6s ease-in-out infinite}
+.paindot{transform-box:fill-box;transform-origin:center;animation:blink 1.2s ease-in-out infinite}
+.nav button.on i{display:inline-block;animation:bounce .5s ease-out}
+.nav button.lock{opacity:.42}.nav button.lock:after{content:" 🔒";font-size:11px}
+.poster{animation:pop .4s ease-out both}
+.poster:nth-child(2){animation-delay:.08s}.poster:nth-child(3){animation-delay:.16s}.poster:nth-child(4){animation-delay:.24s}
+.gbtn:active,.b:active,.big:active{transform:scale(.96)}
+.gbtn,.b,.big{transition:transform .1s}
+.confetti{position:fixed;top:0;width:10px;height:14px;border-radius:2px;pointer-events:none;z-index:50;animation:fall 1.6s ease-in both}
+/* 폰 세로 — 장면 위 · 판 아래 */
+@media (max-width:900px){
+  .page.on{flex-direction:column}
+  .scene,#p1 .scene{flex:0 0 42%}
+  .side{border-left:0;border-top:1px solid var(--line)}
+  .wall{grid-template-columns:1fr}
+  .bar{gap:6px;padding:0 10px}.bar .logo{font-size:19px}.bar .who{display:none}.pill{font-size:13px;padding:4px 8px}#aiPill{display:none}#verPill{font-size:11px}
+  .warn{height:auto;flex-basis:auto;min-height:32px;white-space:normal;text-align:center;font-size:12.5px;line-height:1.25;padding:4px 10px}
+  .nav button{font-size:14px;flex-direction:column;gap:0}.nav i{font-size:19px}
+  .bubble{max-width:60%;font-size:15px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<!-- ===== [2] HTML ===== -->
+<div class="bar">
+  <span class="logo">🏥 메타버스 보건실</span>
+  <span class="who">🙂 <span id="nick">쩐찌</span><em>별명</em></span>
+  <div class="right">
+    <span class="pill" id="verPill" onclick="openSet()" style="cursor:pointer" title="누르면 바뀐 것 표"></span>
+    <span class="pill ai" id="aiPill">선생님 = AI 답 붙여넣기</span>
+    <span class="pill" id="casePill">사례 0건</span>
+    <span class="pill n" id="scorePill">⭐ —</span>
+    <button class="pill" id="sayBtn" onclick="toggleSay()">🔊 소리</button>
+    <button class="pill" onclick="openSet()">⚙ 설정</button>
+  </div>
+</div>
+
+<div class="body">
+  <!-- p1 보건실 -->
+  <section class="page on" id="p1">
+    <div class="scene" id="room"></div>
+    <div class="side">
+      <h2>어디로 갈까요 <small>화면 속 것을 바로 눌러도 돼요</small></h2>
+      <div class="row">
+        <button class="gbtn mint" style="flex:1" onclick="go(2)"><i>🧍</i>② 내 몸 쌍둥이</button>
+        <button class="gbtn" style="flex:1" id="p1Teacher" onclick="go(3)"><i>👩‍⚕️</i>③ 선생님에게</button>
+      </div>
+      <div class="card"><h3><span class="no">0</span>선생님과 해 보기 <span class="hint">보건실에서 하는 것들 · 누르면 움직여요</span></h3><div class="grid3" id="actBtns"></div></div>
+      <div class="card">
+        <h3><span class="no">1</span>내 아바타 꾸미기 <span class="hint">이름 · 학번은 안 써요 · 고르면 바로 저장</span></h3>
+        <div class="row"><input type="text" id="nickIn" placeholder="별명" style="max-width:160px"><span class="hint">별명만</span></div>
+        <div id="avUi"></div>
+      </div>
+      <div class="card" id="todayCard">
+        <h3><span class="no">2</span>오늘 보건실 <span class="hint">가상 보건 선생님이 기다려요</span></h3>
+        <div id="todayKv"></div>
+      </div>
+      <div class="card" style="background:var(--mint2);border-color:#bfe5df">
+        <h3><span class="no m">?</span>이 세계는 어떻게 쓰나요</h3>
+        <div class="hint" style="color:#0f6f63">① 몸 쌍둥이에서 아픈 곳 누르기 → ② 선생님이 되묻기 → ③ 쌍둥이로 앞날 보기 → ④ 탐구 벽에 사례로 붙이기 · 진짜 진단은 병원에서</div>
+      </div>
+      <button class="big mint" id="p1Next" onclick="go(hasSym()?3:2)">🧍 ② 내 몸 쌍둥이 — 여기서 시작</button>
+    </div>
+  </section>
+
+  <!-- p2 몸 쌍둥이 -->
+  <section class="page" id="p2">
+    <div class="scene" style="background:#f2fbfc" id="bodyScene"></div>
+    <div class="side">
+      <h2 id="partTitle">아픈 곳을 눌러요 <small>셋까지 · 한 곳씩 차례로</small></h2>
+      <div class="row" style="margin-top:-4px;align-items:center"><div class="hint" id="stepHint" style="flex:1"></div><button class="b sm dim" onclick="restart()" title="지금 적던 것을 비우고 새 사례">🆕 처음부터</button></div>
+      <div class="card">
+        <h3 id="howTitle"><span class="no">1</span>어떻게 아픈가요 <span class="hint">여러 개 눌러도 돼요</span></h3>
+        <div class="chiprow"><span class="cl" id="howLbl">다쳤어요</span><div class="cs" id="howChips"></div></div>
+        <div class="chiprow"><span class="cl">몸이 아파요</span><div class="cs" id="sickChips"></div></div>
+        <div class="chiprow"><span class="cl">언제부터</span><div class="cs" id="whenChips"></div></div>
+        <div class="chiprow"><span class="cl">지금 상태</span><div class="cs" id="stateChips"></div></div>
+        <textarea id="symText" placeholder="내 말로 적어요 — 예 : 배드민턴 치다가 접질렀어요"></textarea>
+      </div>
+      <div class="card">
+        <h3><span class="no">2</span>앞 · 뒤</h3>
+        <button class="b sm" id="frontBtn" onclick="setView('front')">앞</button><button class="b sm" id="backBtn" onclick="setView('back')">뒤</button>
+        <span class="hint">등 · 허리 · 엉덩이는 「뒤」 에서</span>
+      </div>
+      <div class="row" id="nextSpotRow" style="display:none"><button class="big mint" style="margin:0;flex:1" onclick="doneSpot()">✔ 이 곳 다 적었어요 — 저장</button></div>
+      <button class="big" id="toTeacher" onclick="askTeacher()">👩‍⚕️ 선생님에게 보여 주기</button>
+    </div>
+  </section>
+
+  <!-- p3 선생님 되묻기 -->
+  <section class="page" id="p3">
+    <div class="scene" id="teacherScene"></div>
+    <div class="side">
+      <h2>보건 선생님이 되물어요 <small>병원 의사처럼 두 가지 더 물어요 · 답은 AI 질문 글에 들어가요 · 모르면 「모르겠어요」</small></h2>
+      <div class="card" id="qaCard" style="flex:1;min-height:0;overflow:auto"></div>
+      <button class="big" id="toPredict" onclick="predict()" disabled>🤖 AI 에게 묻기 · 쌍둥이로 앞날 보기</button>
+    </div>
+  </section>
+
+  <!-- p4 앞날 예측 -->
+  <section class="page" id="p4">
+    <div class="scene" style="background:#f2fbfc" id="predScene"></div>
+    <div class="side" id="predSide"></div>
+  </section>
+
+  <!-- p5 탐구 벽 -->
+  <section class="page" id="p5">
+    <div class="wall">
+      <div class="panel">
+        <h3>📌 사례 카드 <span class="hint">이름 · 학번 · 학교 없이 번호만 · 카드를 누르면 아래에</span></h3>
+        <div class="posters" id="posters"></div>
+        <div id="caseDetail"></div>
+      </div>
+      <div class="panel" style="display:flex;flex-direction:column">
+        <h3>📊 성적표 <span class="hint">보고서 표로 바로 복사 · 점수는 사람이</span></h3>
+        <div id="report"></div>
+        <div class="row" style="margin-top:auto;padding-top:10px">
+          <button class="big sub" style="margin:0;flex:1" onclick="copyTable()">📋 표 복사</button>
+          <button class="big sub" style="margin:0;flex:1" onclick="exportJson()">💾 파일로 저장</button>
+        </div>
+        <div class="hint" style="text-align:right;margin-top:6px" id="sig"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="warn" id="warnBand">이 세계의 답은 의사 진단이 아닙니다 · 많이 아프면 바로 어른에게 · 응급은 119</div>
+<div class="nav">
+  <button data-p="1" onclick="go(1)"><i>🏥</i>① 보건실</button>
+  <button data-p="2" onclick="go(2)"><i>🧍</i>② 몸 쌍둥이</button>
+  <button data-p="3" onclick="go(3)"><i>👩‍⚕️</i>③ 선생님</button>
+  <button data-p="4" onclick="go(4)"><i>📈</i>④ 앞날 예측</button>
+  <button data-p="5" onclick="go(5)"><i>📌</i>⑤ 탐구 벽</button>
+</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 설정 창 -->
+<div class="modal" id="setModal" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="box">
+    <h2>⚙ 설정</h2>
+    <div class="card">
+      <h3>클로드 열쇠 <span class="hint">없어도 돼요 — 있으면 「바로 묻기」 단추가 생김 · 이 기기 안에만 · 파일로 내보낼 때 안 들어감</span></h3>
+      <div class="row"><input type="text" id="keyIn" placeholder="sk-ant-… (QR 로 받으면 저절로)" style="flex:1" autocomplete="off"><button class="b" onclick="saveKey()">저장</button><button class="b dim" onclick="clearKey()">지움</button></div>
+      <div class="hint" id="keyState"></div>
+      <div class="row" style="margin-top:6px"><span class="hint">모델</span><select id="modelIn" style="max-width:260px"><option>claude-sonnet-5-5</option><option>claude-haiku-5-5</option><option>claude-opus-5-5</option></select></div>
+      <div class="row" style="margin-top:6px"><label class="hint"><input type="checkbox" id="testIn"> 시험 답으로 돌리기 (AI 없이 흐름만 · 발표 연습)</label></div>
+    </div>
+    <div class="card">
+      <h3>자료 <span class="hint">사례는 이 기기 안에만</span></h3>
+      <div class="row"><button class="b" onclick="exportJson()">💾 파일로 저장</button><label class="b">📂 파일 불러오기<input type="file" accept=".json" style="display:none" onchange="importJson(this)"></label><button class="b dim" onclick="eraseAll()">사례 모두 지움</button></div>
+    </div>
+    <div class="ver" id="verLine"></div>
+  </div>
+</div>
+
+<script>
+/* ===== [3] JS 자료 ===== */
+const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-21 21:20";
+const CHANGES = [["v0.6","2026-10-21","아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const KEY = "clinic57";
+// 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
+const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
+const PART_HOW = [   // 부위 이름 정규식 → 그 부위에 맞는 「어떻게」 칩 (v0.5 · 전무님 «부위별로 달라야»)
+  [/머리|얼굴|뒤통수|이마/, ["부딪힘","넘어짐","베임","코피","눈에 뭐 들어감","두통","어지러움","이 아픔"]],
+  [/^목|목 뒤/, ["삐끗","부딪힘","목 뻣뻣","목 아픔 (감기)","침 삼키면 아픔"]],
+  [/어깨/, ["삠","부딪힘","넘어짐","빠진 느낌","결림"]],
+  [/팔|팔꿈치|손목/, ["삠","부딪힘","베임","찔림","데임","벌레 물림","넘어짐"]],
+  [/손/, ["베임","찔림","데임","손가락 접질림","부딪힘","벌레 물림","물집"]],
+  [/가슴/, ["부딪힘","답답함","숨 가쁨","콕콕 아픔"]],
+  [/배|옆구리/, ["복통","생리통","체함","설사","멀미","부딪힘","토할 것 같음"]],
+  [/등|허리|엉덩이|꼬리뼈/, ["삐끗","부딪힘","넘어짐","결림","무거운 것 들다 아픔"]],
+  [/허벅지|무릎|종아리|정강이|발목|발|뒤꿈치/, ["삠","접질림","넘어짐","부딪힘","쥐 남","베임","벌레 물림","물집","까짐"]]];
+const HOW = [...new Set([...HOW_BASE, ...PART_HOW.flatMap(x=>x[1])])].filter(h=>!["코피","두통","어지러움","복통","생리통","멀미"].includes(h));   // 다침 낱말 전부 (되묻기 규칙용)
+function howFor(parts){   // 누른 부위들에 맞는 칩 — 겹치면 하나로 · 아홉까지
+  const out = []; parts.forEach(n => { const m = PART_HOW.find(x=>x[0].test(n)); (m ? m[1] : HOW_BASE).forEach(h => { if(!out.includes(h)) out.push(h); }); });
+  return out.length ? out.slice(0, 9) : HOW_BASE;
+}
+const SICK = ["두통","복통","생리통","어지러움","코피","감기","멀미","모르겠음"];
+const WHEN = ["방금","오늘","어제부터","며칠 전부터"];
+const STATE = ["붓기","멍","피 남","못 디딤","못 움직임","열 남","토할 것 같음","숨 가쁨"];
+const WRONG = ["(없음)","정보 부족","과하게 심각","가볍게 봄","엉뚱한 부위"];
+const COLORS = ["초록","노랑","빨강"];
+// 몸 부위 — 앞 · 뒤 (SVG 자리는 [4])
+const PARTS_FRONT = ["머리","얼굴","목","가슴","배","왼쪽 어깨","오른쪽 어깨","왼쪽 팔","오른쪽 팔","왼쪽 손","오른쪽 손","왼쪽 허벅지","오른쪽 허벅지","왼쪽 무릎","오른쪽 무릎","왼쪽 종아리","오른쪽 종아리","왼쪽 발목","오른쪽 발목","왼쪽 발","오른쪽 발"];
+const PARTS_BACK = ["뒤통수","목 뒤","등","허리","엉덩이","왼쪽 팔꿈치","오른쪽 팔꿈치","왼쪽 허벅지 뒤","오른쪽 허벅지 뒤","왼쪽 종아리 뒤","오른쪽 종아리 뒤","왼쪽 발뒤꿈치","오른쪽 발뒤꿈치"];
+
+let D = load();           // 저장 자료
+let cur = newCase();      // 지금 보는 사례(아직 저장 전)
+let view = "front", page = 1, tl = "d3", busy = false, selCase = null;
+
+function load(){
+  let d = {}; try{ d = JSON.parse(localStorage.getItem(KEY) || "{}"); }catch(e){}
+  d.cases = d.cases || []; d.nextId = d.nextId || 1; d.settings = Object.assign({nick:"쩐찌", key:"", model:"claude-sonnet-5-5", test:false}, d.settings || {});
+  d.settings.av = Object.assign({sex:"girl", hair:"long", hairc:"#3b2a20", skin:"#ffd9b8", top:"#f1e6cf", glasses:false, fit:"uniform", acc:"none", eyec:"#3b7dd8", shoe:"#3a2a22", bot:""}, d.settings.av || {});   // 아바타 꾸미기 (v0.3 · v0.6 옷 종류 · 소품 · 눈 · 신발 · 아래 색)
+  d.settings.ai = d.settings.ai || "GPT";   // 마지막에 물은 AI 이름 (v0.5)
+  d.settings.say = d.settings.say !== false;   // 🔊 읽어 주기 + 효과음 (v0.6 · 35번에서)
+  d.cases.forEach(c => { if(!c.spots){ const ps = c.parts && c.parts.length ? c.parts : (c.part ? [c.part] : []); c.spots = ps.map((p,i)=>({part:p, how:i?[]:(c.how||[]).slice(), since:i?[]:(c.since||[]).slice()})); if(!ps.length && (c.how||[]).length) c.spots = [{part:"", how:c.how.slice(), since:(c.since||[]).slice()}]; } });   // v0.6 — 옛 사례는 첫 부위에 묶어 보충
+  d.cases.forEach(c => { c.three = c.three || {}; ["gpt","gemini","claude"].forEach(k => c.three[k] = c.three[k] || {color:"", diag:""}); });   // v0.5 — 세 AI 칸에 클로드
+  return d;
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(D)); }catch(e){ toast("저장 못 함 — 브라우저 저장 공간을 확인해요"); } }
+function newCase(){ return {id:0, made:"", part:"", parts:[], spots:[], side:"", how:[], since:[], text:"", qa:[], ai:null, real:{diag:"",hospital:"",treat:"",healed:""}, three:{gpt:{color:"",diag:""},gemini:{color:"",diag:""},claude:{color:"",diag:""}}, score:{diag:"",urgent:"",care:""}, wrong:"(없음)", memo:"", ver:VER}; }
+function isTest(){ return D.settings.test || location.search.includes("test"); }   // v0.5 — 열쇠가 없어도 시험 답이 아님(복사 · 붙여넣기가 기본)
+function hasKey(){ return !!D.settings.key; }
+function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(()=>e.classList.remove("on"), 2200); }
+/* ===== 읽어 주기 · 효과음 — 35번 바질 키우기 것 (패드 한국어 음성 speechSynthesis · 소리는 파일 없이 AudioContext) · v0.6 ===== */
+function speak(t){
+  try { if(!window.speechSynthesis || !D.settings.say) return; speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(String(t).replace(/<[^>]+>/g, " ").replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "").replace(/\s+/g, " ").trim());
+    u.lang = "ko-KR"; u.rate = .95; const v = speechSynthesis.getVoices().find(v => /^ko/i.test(v.lang)); if(v) u.voice = v; speechSynthesis.speak(u); } catch(e){}
+}
+function toggleSay(){ D.settings.say = !D.settings.say; save(); drawTop(); if(D.settings.say){ sfx("pop"); speak("소리를 켰어요. 선생님 말을 읽어 줄게요. 말풍선을 누르면 다시 읽어요."); } else { try{ speechSynthesis.cancel(); }catch(e){} } }
+document.addEventListener("click", ev => {   // 말풍선 · 선생님 말을 누르면 읽어 줌 (단추 · 칸은 그대로)
+  if(!D || !D.settings.say) return; const el = ev.target.closest(".bubble,.bub.ai,.dx,.why,.care,.tl"); if(!el || ev.target.closest("button,input,textarea,select,a,summary")) return; speak(el.innerText);
+}, true);
+let actx = null;
+function ac(){ if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); return actx; }
+function tone(f1, f2, dur, type, vol, delay){
+  const c = ac(), o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + (delay || 0);
+  o.type = type || "sine"; o.frequency.setValueAtTime(f1, t0); o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol || .15, t0 + .02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(c.destination); o.start(t0); o.stop(t0 + dur + .05);
+}
+function noise(dur, freq, vol, q){
+  const c = ac(), n = c.createBufferSource(), b = c.createBuffer(1, c.sampleRate * dur, c.sampleRate), d = b.getChannelData(0);
+  for(let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (0.6 + 0.4 * Math.sin(i / 900));
+  const f = c.createBiquadFilter(), g = c.createGain(); f.type = "bandpass"; f.frequency.value = freq; f.Q.value = q || 1.2;
+  g.gain.setValueAtTime(vol, c.currentTime); g.gain.setValueAtTime(vol, c.currentTime + dur * .8); g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + dur);
+  n.buffer = b; n.connect(f).connect(g).connect(c.destination); n.start();
+}
+function sfx(k){
+  if(!D || !D.settings.say) return;
+  try {
+    if(k === "tap")    tone(240, 160, .09, "triangle", .2);
+    if(k === "pop")    tone(700, 320, .1, "sine", .14);
+    if(k === "chime"){ tone(880, 880, .2, "sine", .12); tone(1320, 1320, .3, "sine", .1, .12); }
+    if(k === "bad")    tone(320, 170, .32, "sawtooth", .06);
+    if(k === "whoosh") noise(.45, 700, .14, .6);
+    if(k === "grow")   tone(420, 900, .28, "sine", .12);
+  } catch(e){}
+}
+const $ = id => document.getElementById(id);
+const fmt = iso => { const d = new Date(iso); return isNaN(d) ? "" : d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")+" "+String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); };
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// 되묻기 — v0.5 부터 AI 없이 앱 규칙으로 (증상에 맞춰 둘까지) · 답은 질문 글에 같이 들어감
+function localQuestions(c){
+  const qs = [], parts = partsOf(c), sick = c.how.filter(h=>SICK.includes(h)), inj = c.how.filter(h=>HOW.includes(h));
+  const head = parts.some(p=>["머리","얼굴","목","뒤통수","목 뒤"].includes(p)), all = [...c.how, ...c.since].join(" ");
+  if(head && (inj.length || !sick.length)) qs.push({q:"부딪힌 뒤 토하거나 어지럽거나 잠이 쏟아졌나요?", options:["아니에요","조금 어지러워요","토했어요"]});
+  if(/베임|찔림|피 남/.test(all)) qs.push({q:"피가 지금도 나나요?", options:["멈췄어요","조금 나요","계속 나요"]});
+  if(c.how.includes("데임")) qs.push({q:"덴 자리가 어떤가요?", options:["빨갛기만 해요","물집이 있어요","살이 벗겨졌어요"]});
+  if(inj.length && !head) qs.push({q:"그 자리를 디디거나 눌렀을 때 뼈가 콕 찌르듯 아픈가요?", options:["뼈는 안 아파요","뼈가 아파요"]});
+  if(sick.includes("복통")) qs.push({q:"배 어디가 아픈가요?", options:["배 전체","오른쪽 아래","명치 쪽"]});
+  if(sick.includes("두통") || sick.includes("어지러움")) qs.push({q:"눈이 흐리거나 말이 어눌해지나요?", options:["아니에요","조금 그래요","네 그래요"]});
+  if(sick.length) qs.push({q:"열이 나거나 몸이 떨리나요?", options:["아니에요","조금 뜨거워요","열이 많이 나요"]});
+  if(inj.length) qs.push({q:"멍이 들었거나 모양이 달라 보이나요?", options:["둘 다 아니에요","멍 있어요","모양이 달라요"]});
+  qs.push({q:"지금 얼마나 아픈가요?", options:["조금","꽤 아파요","너무 아파요"]});
+  return qs.slice(0, 2);
+}
+function partsOf(c){ return c.parts && c.parts.length ? c.parts : (c.part ? [c.part] : []); }
+function partLabel(c){ const p = partsOf(c); return p.length ? p.join(" · ") : (c.how.filter(h=>SICK.includes(h)).join(" · ") || "—"); }
+function hasSym(c){ c = c || cur; return partsOf(c).length > 0 || c.how.some(h=>SICK.includes(h)); }
+function testPredict(c){
+  const headPart = partsOf(c).some(p=>["머리","얼굴","목","뒤통수","목 뒤"].includes(p));   // 머리 · 목은 늘 빨강 (발목 · 손목은 아님)
+  const red = headPart || /못 디딤|못 움직임|모양이 달라요|피 남|열 남|숨 가쁨|토했어요|계속 나요|살이 벗겨|열이 많이|네 그래요/.test([...c.since, ...c.qa.map(x=>x.a)].join(" "));
+  const ansBone = c.qa.some(x=>/뼈가 아파요/.test(x.a));
+  const sick = c.how.filter(h=>SICK.includes(h));
+  const color = red || ansBone ? "빨강" : (["붓기","멍","토할 것 같음"].some(k=>c.since.includes(k)) || ["두통","복통","생리통","어지러움"].some(k=>sick.includes(k)) ? "노랑" : "초록");
+  return {diag: color==="빨강" ? (ansBone?"골절 가능성":"바로 확인이 필요한 상태") : (c.how.includes("삠")?"인대 손상(염좌) 가능성":sick.length?"가벼운 몸살 · 소화 불편 가능성":"가벼운 타박 가능성"),
+    color, why: color==="빨강" ? "뼈가 아프거나 모양이 다르면 골절일 수 있어 안전한 쪽으로 봐요" : "뼈는 안 아프고 붓기만 있어 인대가 늘어난 쪽으로 봐요 — 애매하면 병원에서 확인",
+    timeline:{today:"붓고 아픔", d3:"붓기 조금 가라앉음 · 걸을 때 아직 아픔", w1:"거의 나음 · 무리하면 다시 아플 수 있음", w2:"나음 · 운동은 천천히"},
+    care:["쉬기","얼음 15분씩 하루 몇 번","가볍게 감기","다친 곳 높이기"],
+    red:["더 붓거나 못 디딤","뼈가 콕 아픔","모양이 달라짐","감각이 없음"], model:"시험 답", at:new Date().toISOString()};
+}
+
+/* ===== [4] JS 화면 ===== */
+// 단계 차례 — ① 보건실 → ② 쌍둥이(아픈 곳 저장) → ③ 선생님(되묻기 답) → ④ 앞날 → ⑤ 탐구 벽 · 앞 단계를 안 하면 잠김 (v0.6 · 전무님 «앞에 거를 해야 다음으로»)
+function stepOk(n){ return n <= 2 || n === 5 || (n === 3 && hasSym()) || (n === 4 && (cur.ai || (cur.qa.length && cur.qa.every(x=>x.a)))); }
+function stepWhy(n){ return n === 3 ? "먼저 ② 몸 쌍둥이에서 아픈 곳을 누르고 ✔ 저장해요" : "먼저 ③ 선생님 되묻기에 답해요"; }
+function drawNav(){ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("lock", !stepOk(+b.dataset.p))); }
+function go(n){
+  if(!stepOk(n)){ sfx("bad"); toast(stepWhy(n)); return; }
+  page = n; if(n!==1) rst = 0; drawNav(); document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on", p.id==="p"+n));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on", +b.dataset.p===n));
+  if(n===1) drawRoom(); if(n===2) drawBody(); if(n===3) drawTeacher(); if(n===4) drawPred(); if(n===5) drawWall();
+  $("warnBand").textContent = n===5 ? "이 세계의 답은 의사 진단이 아닙니다 · 점수는 사람이 매깁니다" : "이 세계의 답은 의사 진단이 아닙니다 · 많이 아프면 바로 어른에게 · 응급은 119";
+}
+function drawTop(){
+  $("nick").textContent = D.settings.nick; $("nickIn").value = D.settings.nick;
+  $("casePill").textContent = "사례 " + D.cases.length + "건";
+  const avg = average(); $("scorePill").textContent = "⭐ " + (avg==null ? "—" : avg);
+  $("aiPill").textContent = isTest() ? "선생님 = 시험 답" : "선생님 = AI 답 붙여넣기";
+  $("sayBtn").textContent = D.settings.say ? "🔊 소리" : "🔈 소리 끔";
+  $("verPill").textContent = VER + " · " + FIXED.slice(5);
+}
+let walked = false;   // 처음 한 번만 걸어 들어오고 그 뒤엔 제자리 숨쉬기
+let rst = 0, act = "bed";   // 동작 — 0 보통 · 1 내가 걸어감 · 2 선생님이 옴 · 3 하는 중 (v0.6 · 아홉 가지)
+// 서 있는 아바타(meSvg) 안 부위 자리 — 밴드 · 얼음을 그 자리에
+function mePt(n){ n = n || ""; const L = /왼쪽/.test(n) ? -1 : 1; return /발/.test(n) ? [L*12,144] : /손/.test(n) ? [L*37,99] : /머리|얼굴|뒤통수/.test(n) ? [0,-12] : /목/.test(n) ? [0,34] : /어깨/.test(n) ? [L*28,38] : /팔|팔꿈치/.test(n) ? [L*38,66] : /손/.test(n) ? [L*37,99] : /가슴|등/.test(n) ? [0,56] : /배|허리|엉덩이/.test(n) ? [0,84] : /허벅지/.test(n) ? [L*12,108] : /무릎/.test(n) ? [L*12,124] : /종아리|정강이/.test(n) ? [L*12,132] : /발/.test(n) ? [L*12,144] : [0,84]; }
+const ACTS = {   // m = 내가 가는 자리 · t = 선생님이 오는 자리(없으면 책상에 그대로) · p = 소품(그려진 뒤) · say = 선생님 말
+  bed:   {n:"🛏️ 침대에 눕기", m:[418,506], t:[500,400]},
+  steth: {n:"🩺 청진기 진찰", m:[440,500], t:[360,470], p:()=>`<path d="M401 574 Q420 598 440 560" stroke="#2f3a4a" stroke-width="3.5" fill="none"/><circle cx="440" cy="560" r="8" fill="#2f3a4a" stroke="#fff" stroke-width="2.5"/>`, say:()=>"숨을 크게 들이쉬어 봐요 … 심장 소리 · 숨소리 좋아요"},
+  temp:  {n:"🌡️ 체온 재기", m:[440,500], t:[360,470], p:f=>`<path d="M401 574 L416 498" stroke="#2f3a4a" stroke-width="3" fill="none"/><rect x="406" y="492" width="36" height="9" rx="4.5" fill="#fff" stroke="#2f3a4a" stroke-width="2"/><rect x="434" y="489" width="12" height="15" rx="3" fill="#9fb3c8"/><g class="predfig"><rect x="322" y="396" width="100" height="32" rx="8" fill="#fff" stroke="#9fb3c8" stroke-width="2"/><text x="372" y="419" text-anchor="middle" font-size="19" fill="${f?"#d93025":"#1e9e5a"}" font-family="Jua">${f?"38.1":"36.8"} ℃</text></g>`, say:f=>f ? "체온 38.1도 — 열이 있어요. 오늘은 쉬고 어른에게 말해요" : "체온 36.8도 — 열은 없어요"},
+  band:  {n:"🩹 밴드 · 붕대", m:[440,500], t:[360,470], p:(f,[x,y])=>`<g transform="translate(${440+x},${500+y}) rotate(-25)"><g class="predfig"><rect x="-17" y="-7" width="34" height="14" rx="5" fill="#f6d4b8" stroke="#d9a77c" stroke-width="2"/><rect x="-6" y="-4" width="12" height="8" rx="2" fill="#fff" opacity=".85"/></g></g>`, say:()=>"깨끗이 씻고 밴드를 붙였어요 — 집에 가서 한 번 갈아요"},
+  ice:   {n:"🧊 얼음찜질", m:[440,500], t:[360,470], p:(f,[x,y])=>`<g transform="translate(${440+x},${500+y})"><g class="predfig"><rect x="-18" y="-13" width="36" height="26" rx="7" fill="#bfe3ff" stroke="#5aa0e0" stroke-width="2"/><text x="0" y="6" text-anchor="middle" font-size="16">❄</text></g></g>`, say:()=>"얼음은 수건에 싸서 15분 — 부기를 가라앉혀요"},
+  water: {n:"🥤 물 마시기", m:[330,500], t:null, p:()=>`<rect x="357" y="586" width="20" height="26" rx="3" fill="#cfe8ff" stroke="#5aa0e0" stroke-width="2"/><rect x="357" y="597" width="20" height="15" fill="#8fc4f5"/>`, say:()=>"물 한 컵 천천히 — 어지럽거나 머리 아플 땐 물부터"},
+  eye:   {n:"👁 시력 검사", m:[330,500], t:null, p:()=>`<g class="predfig"><rect x="476" y="100" width="124" height="190" rx="8" fill="#fff" stroke="#9fb3c8" stroke-width="3"/>${["ㅏ","ㅑ ㅓ","ㅕ ㅗ ㅛ","ㅜ ㅠ ㅡ ㅣ","ㄱ ㄴ ㄷ ㄹ ㅁ"].map((r,i)=>`<text x="538" y="${140+i*34}" text-anchor="middle" font-size="${30-i*5}" fill="#1f2630" font-family="Jua">${r}</text>`).join("")}</g><circle cx="318" cy="508" r="10" fill="${D.settings.av.skin}" stroke="#4e3b30" stroke-width="2"/>`, say:()=>"왼쪽 눈을 가리고 … 맨 아랫줄은? 양쪽 다 잘 보여요"},
+  height:{n:"📏 키 재기", m:[560,500], t:[470,470], p:(f,pt,h)=>`<rect x="622" y="310" width="14" height="124" fill="#ffe08a" stroke="#c9a37a" stroke-width="2"/>${[0,1,2,3,4,5,6].map(i=>`<line x1="622" y1="${318+i*18}" x2="${i%2?628:634}" y2="${318+i*18}" stroke="#c9a37a" stroke-width="2"/>`).join("")}<g class="predfig"><rect x="440" y="396" width="100" height="32" rx="8" fill="#fff" stroke="#9fb3c8" stroke-width="2"/><text x="490" y="419" text-anchor="middle" font-size="19" fill="#1f2630" font-family="Jua">키 ${h} cm</text></g>`, say:(f,pt,h)=>`키 ${h} 센티미터 — 지난번보다 1 센티미터 컸어요`},
+  wash:  {n:"🧼 손 씻기", m:[540,500], t:null, p:()=>`<rect x="582" y="470" width="56" height="16" rx="5" fill="#fff" stroke="#9fb3c8" stroke-width="2"/><rect x="590" y="486" width="40" height="70" rx="5" fill="#e9eef5" stroke="#9fb3c8" stroke-width="2"/><path d="M610 470 v-20 h16" stroke="#9fb3c8" stroke-width="5" fill="none" stroke-linecap="round"/><g class="predfig">${[0,1,2,3].map(i=>`<circle cx="${572+i*9}" cy="${596-i*7}" r="${4+i%2*2}" fill="#fff" stroke="#7cc4f5" stroke-width="1.5"/>`).join("")}</g>`, say:()=>"비누로 30초 — 손 씻기가 첫 번째 치료예요"}};
+// ===== 캐릭터 v0.4 — 전무님이 고른 시안 3(여학생) · 9(남학생) 느낌 : 큰 머리 · 큰 눈 + 반짝 · 볼터치 · 가는 갈색 테두리
+//   여 = 셔츠 + 남색 넥타이 + 가디건(옷 색) + 남색 주름치마 + 흰 양말 · 남 = 셔츠 + 하늘 넥타이 + 블레이저(옷 색 · 깃 · 주머니) + 회색 바지
+//   머리 가운데가 (0,0) · 발끝 y≈150 · 겉 g 에 자리, 속 g 에 움직임 class (CSS transform 이 속성 transform 을 덮으므로 둘을 나눔)
+const LINE = "#4e3b30";
+const OUT = `stroke="${LINE}" stroke-width="2" stroke-linejoin="round"`;
+// 얼굴 — 귀 · 머리통 · 볼터치 · 눈 · 입 (girl 이면 파란 눈동자 큰 눈 · 아니면 까만 눈)
+function faceSvg(S, girl, ears, iris){
+  const eyes = girl
+    ? `<ellipse cx="-12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><ellipse cx="12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><circle cx="-12" cy="9" r="4.2" fill="${iris}"/><circle cx="12" cy="9" r="4.2" fill="${iris}"/><circle cx="-12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="-13.5" cy="6" r="1.7" fill="#fff"/><circle cx="10.5" cy="6" r="1.7" fill="#fff"/><path d="M-19 -1 q7 -4 13 -1 M6 -2 q6 -3 13 1" stroke="${LINE}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-18.5 3 l-2.5 -2 M-14 1.2 l-1 -2.6 M18.5 3 l2.5 -2 M14 1.2 l1 -2.6" stroke="${LINE}" stroke-width="1.4" stroke-linecap="round"/>`
+    : `<ellipse cx="-12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><ellipse cx="12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><circle cx="-12" cy="9" r="2" fill="#1a1a1a"/><circle cx="12" cy="9" r="2" fill="#1a1a1a"/><circle cx="-13" cy="6.5" r="1.3" fill="#fff"/><circle cx="11" cy="6.5" r="1.3" fill="#fff"/><path d="M-19 -2 q7 -4 13 -1 M6 -3 q6 -3 13 1" stroke="${LINE}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+  return (ears ? `<circle cx="-33" cy="8" r="6" fill="${S}" ${OUT}/><circle cx="33" cy="8" r="6" fill="${S}" ${OUT}/>` : "")
+    + `<ellipse cx="0" cy="2" rx="34" ry="33" fill="${S}" ${OUT}/><ellipse cx="-21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><ellipse cx="21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/>${eyes}<path d="M-6 19 Q0 27 6 19 Z" fill="#fff" stroke="#b05050" stroke-width="1.8" stroke-linejoin="round"/>`;
+}
+// 머리 모양 아홉 — 뒤판 · 앞머리 · 귀 보임 (v0.6)
+const HAIRS = [["long","긴 머리"],["bob","단발"],["tied","묶음"],["twin","양갈래"],["pony","포니"],["curly","곱슬"],["short","짧은"],["spiky","뾰족"],["mush","바가지"]];
+const FITS = [["uniform","교복"],["gym","체육복"],["hoodie","후드티"],["casual","평상복"]];
+const ACCS = [["none","없음"],["band","머리띠"],["ribbon","리본"],["cap","모자"],["mask","마스크"]];
+function hairSvg(a, H){
+  const back = {
+    long: `<path d="M-37 -6 Q-37 -44 0 -44 Q37 -44 37 -6 L41 60 Q38 72 27 70 L-27 70 Q-38 72 -41 60 Z" fill="${H}" ${OUT}/>`,
+    bob: `<path d="M-36 -6 Q-36 -44 0 -44 Q36 -44 36 -6 L38 30 Q34 40 24 36 L-24 36 Q-34 40 -38 30 Z" fill="${H}" ${OUT}/>`,
+    tied: `<path d="M-35 -8 Q-35 -42 0 -42 Q35 -42 35 -8 L36 14 Q30 24 24 14 L-24 14 Q-30 24 -36 14 Z" fill="${H}" ${OUT}/><path d="M30 -2 Q56 -4 50 28 Q44 42 32 24 Z" fill="${H}" ${OUT}/>`,
+    twin: `<path d="M-37 -6 Q-37 -44 0 -44 Q37 -44 37 -6 L36 12 Q30 20 24 12 L-24 12 Q-30 20 -36 12 Z" fill="${H}" ${OUT}/><path d="M-36 2 Q-64 8 -56 50 Q-48 66 -38 44 Z" fill="${H}" ${OUT}/><path d="M36 2 Q64 8 56 50 Q48 66 38 44 Z" fill="${H}" ${OUT}/>`,
+    pony: `<path d="M-35 -8 Q-35 -42 0 -42 Q35 -42 35 -8 L36 14 Q30 24 24 14 L-24 14 Q-30 24 -36 14 Z" fill="${H}" ${OUT}/><path d="M12 -42 Q44 -72 52 -30 Q54 12 36 32 Q40 -8 20 -30 Z" fill="${H}" ${OUT}/>`,
+    curly: `<path d="M-38 -4 Q-40 -46 0 -46 Q40 -46 38 -4 Q46 14 36 26 Q42 42 26 40 Q16 48 0 40 Q-16 48 -26 40 Q-42 42 -36 26 Q-46 14 -38 -4 Z" fill="${H}" ${OUT}/>`,
+    short: ``, spiky: `<path d="M-36 -4 Q-36 -44 0 -44 Q36 -44 36 -4 L36 8 L-36 8 Z" fill="${H}" ${OUT}/>`,
+    mush: `<path d="M-38 -6 Q-38 -46 0 -46 Q38 -46 38 -6 L40 14 Q0 24 -40 14 Z" fill="${H}" ${OUT}/>`}[a.hair] || "";
+  const girl = a.sex === "girl";
+  const front = a.hair === "spiky" ? `<path d="M-34 0 Q-38 -52 -10 -60 L-4 -46 L8 -64 L12 -46 L26 -58 L22 -40 Q36 -42 34 0 L28 -6 L22 -13 L14 -4 L8 -14 L0 -6 L-8 -14 L-16 -6 L-22 -13 L-28 -4 Z" fill="${H}" ${OUT}/>`
+    : a.hair === "mush" ? `<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 L30 -2 L24 -8 L18 -2 L10 -8 L0 -2 L-10 -8 L-18 -2 L-24 -8 L-30 -2 Z" fill="${H}" ${OUT}/>`
+    : a.hair === "curly" ? `<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q30 -10 22 -8 Q16 -18 8 -8 Q0 -18 -8 -8 Q-16 -18 -22 -8 Q-30 -10 -34 2 Z" fill="${H}" ${OUT}/>`
+    : girl ? `<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q30 -16 16 -16 Q10 -4 0 -8 Q-8 -16 -18 -8 Q-26 -14 -34 2 Z" fill="${H}" ${OUT}/>`
+    : `<path d="M-34 0 Q-36 -42 0 -42 Q36 -42 34 0 L28 -6 L22 -13 L14 -4 L8 -14 L0 -6 L-8 -14 L-16 -6 L-22 -13 L-28 -4 Z" fill="${H}" ${OUT}/>`;
+  return {back, front, ears: ["short","tied","pony","spiky","mush","twin"].includes(a.hair)};
+}
+// 소품 — 머리띠 · 리본 · 모자 · 마스크 · 안경
+function accSvg(a){
+  const acc = {band: `<path d="M-33 -16 Q0 -36 33 -16" fill="none" stroke="#e85d8a" stroke-width="5" stroke-linecap="round"/>`,
+    ribbon: `<g transform="translate(27,-28)"><path d="M0 0 L-13 -8 L-13 8 Z M0 0 L13 -8 L13 8 Z" fill="#e85d8a" ${OUT}/><circle r="3.5" fill="#ffcf4a" ${OUT}/></g>`,
+    cap: `<path d="M-36 -16 Q0 -60 36 -16 Z" fill="#2457c5" ${OUT}/><path d="M-4 -20 L50 -12 L48 -5 L-4 -13 Z" fill="#2457c5" ${OUT}/><circle cx="0" cy="-40" r="3" fill="#ffcf4a"/>`,
+    mask: `<path d="M-22 12 Q0 10 22 12 L20 30 Q0 36 -20 30 Z" fill="#dfe9f5" ${OUT}/><path d="M-22 14 L-33 8 M22 14 L33 8" stroke="${LINE}" stroke-width="1.6"/>`}[a.acc] || "";
+  const glasses = a.glasses ? `<g fill="none" stroke="#2f3a4a" stroke-width="2"><rect x="-20" y="2" width="16" height="12" rx="4"/><rect x="4" y="2" width="16" height="12" rx="4"/><path d="M-4 8 h8 M-20 7 l-9 -3 M20 7 l9 -3"/></g>` : "";
+  return glasses + acc;
+}
+// 옷 네 가지 — 교복(여 가디건 + 치마 · 남 블레이저 + 바지) · 체육복(흰 줄) · 후드티(모자 · 주머니 · 청바지) · 평상복(여 원피스 · 남 티셔츠 + 반바지) · 신발 색
+function outfitSvg(a, S){
+  const T = a.top, girl = a.sex === "girl", fit = a.fit || "uniform";
+  const bot = a.bot || (fit === "uniform" ? (girl ? "#2b3a66" : "#8d93a0") : fit === "gym" ? "#3a3f4a" : fit === "hoodie" ? "#4a6fa5" : girl ? T : "#c9a37a");
+  const shoe = a.shoe || "#3a2a22", neck = `<rect x="-7" y="28" width="14" height="12" fill="${S}"/>`;
+  const sleeveShort = fit === "casual";
+  const arms = `<rect x="-45" y="36" width="16" height="58" rx="8" fill="${sleeveShort ? S : T}" ${OUT}/><rect x="29" y="36" width="16" height="58" rx="8" fill="${sleeveShort ? S : T}" ${OUT}/>${sleeveShort ? `<rect x="-45" y="36" width="16" height="24" rx="7" fill="${T}" ${OUT}/><rect x="29" y="36" width="16" height="24" rx="7" fill="${T}" ${OUT}/>` : ""}${fit === "gym" ? `<path d="M-37 42 V88 M37 42 V88" stroke="#fff" stroke-width="3"/>` : ""}<circle cx="-37" cy="99" r="6.5" fill="${S}" ${OUT}/><circle cx="37" cy="99" r="6.5" fill="${S}" ${OUT}/>`;
+  const loafers = `<rect x="-22" y="142" width="19" height="8" rx="3.5" fill="${shoe}" ${OUT}/><rect x="3" y="142" width="19" height="8" rx="3.5" fill="${shoe}" ${OUT}/>`;
+  const sneakers = `<rect x="-23" y="140" width="21" height="10" rx="4" fill="${shoe}" ${OUT}/><rect x="2" y="140" width="21" height="10" rx="4" fill="${shoe}" ${OUT}/><path d="M-22 146 h19 M3 146 h19" stroke="#fff" stroke-width="2.4"/>`;
+  const legsSkin = `<rect x="-18" y="124" width="13" height="18" fill="${S}"/><rect x="5" y="124" width="13" height="18" fill="${S}"/>`;
+  const longPants = `<rect x="-29" y="98" width="27" height="44" rx="4" fill="${bot}" ${OUT}/><rect x="2" y="98" width="27" height="44" rx="4" fill="${bot}" ${OUT}/>${fit === "gym" ? `<path d="M-6 100 V140 M6 100 V140" stroke="#fff" stroke-width="2.4"/>` : `<path d="M-15 102 V140 M15 102 V140" stroke="rgba(0,0,0,.18)" stroke-width="1.4"/>`}`;
+  if(fit === "uniform"){
+    const shirt = `<path d="M-16 34 L0 50 L16 34 L22 38 L0 60 L-22 38 Z" fill="#fff" ${OUT}/>`;
+    return girl
+      ? `${neck}${shirt}<path d="M-4 42 L4 42 L2 48 L5 64 L0 70 L-5 64 L-2 48 Z" fill="#2b3a66" ${OUT}/><path d="M-30 36 L-14 32 L-1 60 L-1 96 L-31 96 Z" fill="${T}" ${OUT}/><path d="M30 36 L14 32 L1 60 L1 96 L31 96 Z" fill="${T}" ${OUT}/><circle cx="4" cy="68" r="2" fill="#e8dcc0" ${OUT}/><circle cx="4" cy="80" r="2" fill="#e8dcc0" ${OUT}/><circle cx="4" cy="90" r="2" fill="#e8dcc0" ${OUT}/>${arms}<path d="M-31 96 L31 96 L38 128 L-38 128 Z" fill="${bot}" ${OUT}/><path d="M-15 96 L-18 128 M0 96 V128 M15 96 L18 128" stroke="rgba(0,0,0,.2)" stroke-width="1.6"/><rect x="-18" y="126" width="13" height="14" fill="${S}"/><rect x="5" y="126" width="13" height="14" fill="${S}"/><rect x="-19" y="136" width="15" height="8" rx="2" fill="#fff" ${OUT}/><rect x="4" y="136" width="15" height="8" rx="2" fill="#fff" ${OUT}/>${loafers}`
+      : `${neck}${shirt}<path d="M-4 42 L4 42 L2 48 L5 68 L0 74 L-5 68 L-2 48 Z" fill="#5aa0e0" ${OUT}/><path d="M-33 36 L-14 32 L-1 62 L-1 98 L-34 98 Z" fill="${T}" ${OUT}/><path d="M33 36 L14 32 L1 62 L1 98 L34 98 Z" fill="${T}" ${OUT}/><path d="M-14 32 L-3 50 L-1 62 L-12 50 Z M14 32 L3 50 L1 62 L12 50 Z" fill="#fff" opacity=".45"/><circle cx="4" cy="72" r="2" fill="#3b4656"/><circle cx="4" cy="84" r="2" fill="#3b4656"/><path d="M-27 80 h11 M16 80 h11" stroke="${LINE}" stroke-width="1.6"/>${arms}${longPants}${loafers}`;
+  }
+  if(fit === "gym") return `${neck}<path d="M-30 36 L-14 32 L0 44 L14 32 L30 36 L31 98 L-31 98 Z" fill="${T}" ${OUT}/><path d="M-14 32 L0 44 L14 32" fill="none" stroke="#fff" stroke-width="3"/><path d="M0 46 V96" stroke="#fff" stroke-width="2"/><path d="M-24 60 h10 M14 60 h10" stroke="#fff" stroke-width="2"/>${arms}${longPants}${sneakers}`;
+  if(fit === "hoodie") return `${neck}<path d="M-30 30 Q0 12 30 30 L26 46 Q0 38 -26 46 Z" fill="${T}" ${OUT}/><path d="M-30 36 L-14 32 L0 42 L14 32 L30 36 L31 98 L-31 98 Z" fill="${T}" ${OUT}/><path d="M-19 74 L19 74 L15 94 L-15 94 Z" fill="${T}" ${OUT}/><path d="M-5 44 V64 M5 44 V64" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>${arms}${longPants}${sneakers}`;
+  return girl   // 평상복
+    ? `${neck}<path d="M-28 36 L-12 32 L0 42 L12 32 L28 36 L30 80 L-30 80 Z" fill="${T}" ${OUT}/><path d="M-30 80 L30 80 L42 126 L-42 126 Z" fill="${T}" ${OUT}/><rect x="-31" y="77" width="62" height="6" fill="#fff" opacity=".7"/><path d="M-14 84 L-18 124 M14 84 L18 124" stroke="rgba(0,0,0,.14)" stroke-width="1.4"/>${arms}${legsSkin}${sneakers}`
+    : `${neck}<path d="M-28 36 L-12 32 L0 42 L12 32 L28 36 L29 96 L-29 96 Z" fill="${T}" ${OUT}/><path d="M-12 32 Q0 46 12 32" fill="none" stroke="#fff" stroke-width="2"/><path d="M-10 62 h20 M-10 70 h20" stroke="#fff" stroke-width="2.4" opacity=".8"/>${arms}<rect x="-29" y="96" width="27" height="26" rx="4" fill="${bot}" ${OUT}/><rect x="2" y="96" width="27" height="26" rx="4" fill="${bot}" ${OUT}/><rect x="-18" y="120" width="13" height="22" fill="${S}"/><rect x="5" y="120" width="13" height="22" fill="${S}"/>${sneakers}`;
+}
+function meSvg(x, y, cls){
+  const a = D.settings.av, H = a.hairc, S = a.skin, girl = a.sex === "girl", hr = hairSvg(a, H);
+  return `<g transform="translate(${x},${y})"><g class="${cls}">${hr.back}${outfitSvg(a, S)}${faceSvg(S, girl, hr.ears, a.eyec || "#3b7dd8")}${hr.front}${accSvg(a)}</g></g>`;
+}
+// 보건 선생님 — 같은 그림체 · 쪽머리 · 흰 가운 + 하늘색 윗옷 + 빨간 십자 · exam 이면 청진기 · 발끝 y≈150
+function teacherSvg(x, y, cls, exam){
+  const S = "#ffd9b8", H = "#5a3a2a";
+  const st = exam ? `<path d="M-14 36 Q-24 66 -8 86" stroke="#2f3a4a" stroke-width="3" fill="none"/><path d="M14 36 Q24 60 10 76" stroke="#2f3a4a" stroke-width="3" fill="none"/><circle cx="-8" cy="90" r="7" fill="#2f3a4a" ${OUT}/>` : "";
+  return `<g transform="translate(${x},${y})"><g class="${cls}" style="cursor:pointer" onclick="go(3)">
+<circle cx="0" cy="-34" r="12" fill="${H}" ${OUT}/><path d="M-35 -4 Q-35 -42 0 -42 Q35 -42 35 -4 L35 12 Q30 22 25 12 L-25 12 Q-30 22 -35 12 Z" fill="${H}" ${OUT}/>
+<rect x="-7" y="28" width="14" height="12" fill="${S}"/><path d="M-20 32 L0 60 L20 32 Z" fill="#bfe0f5" ${OUT}/>
+<path d="M-34 36 L-18 32 L-2 62 L-2 112 L-36 112 Z" fill="#fff" ${OUT}/><path d="M34 36 L18 32 L2 62 L2 112 L36 112 Z" fill="#fff" ${OUT}/><circle cx="5" cy="74" r="2" fill="#9fb3c8"/><circle cx="5" cy="88" r="2" fill="#9fb3c8"/><circle cx="5" cy="100" r="2" fill="#9fb3c8"/>
+<rect x="-24" y="70" width="12" height="4" fill="#d93025"/><rect x="-20" y="66" width="4" height="12" fill="#d93025"/>
+<rect x="-49" y="36" width="16" height="62" rx="8" fill="#fff" ${OUT}/><rect x="33" y="36" width="16" height="62" rx="8" fill="#fff" ${OUT}/><circle cx="-41" cy="104" r="6.5" fill="${S}" ${OUT}/><circle cx="41" cy="104" r="6.5" fill="${S}" ${OUT}/>
+<path d="M-33 112 L33 112 L36 132 L-36 132 Z" fill="#3b4a6b" ${OUT}/><rect x="-18" y="130" width="13" height="12" fill="${S}"/><rect x="5" y="130" width="13" height="12" fill="${S}"/><rect x="-22" y="141" width="19" height="8" rx="3.5" fill="#3a2a22" ${OUT}/><rect x="3" y="141" width="19" height="8" rx="3.5" fill="#3a2a22" ${OUT}/>
+${st}${faceSvg(S, true, true, "#6b4a2e")}<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q28 -24 4 -22 Q0 -14 -4 -22 Q-28 -24 -34 2 Z" fill="${H}" ${OUT}/></g></g>`;
+}
+// 몸 쌍둥이(디지털 트윈) — 같은 얼굴 비율의 청록 선 그림 · 조각은 부위마다(앞 · 뒤) · 얼굴 · 머리카락은 눌리지 않는 덧그림
+const TWIN_F = [
+  ["머리",'<circle cx="320" cy="86" r="52"/>'],["얼굴",'<path d="M270 100 Q272 58 320 56 Q368 58 370 100 A52 52 0 0 1 270 100 Z"/>'],["목",'<rect x="306" y="134" width="28" height="24" rx="8"/>'],
+  ["왼쪽 어깨",'<circle cx="260" cy="170" r="20"/>'],["오른쪽 어깨",'<circle cx="380" cy="170" r="20"/>'],
+  ["가슴",'<rect x="260" y="154" width="120" height="86" rx="28"/>'],["배",'<rect x="266" y="240" width="108" height="90" rx="26"/>'],
+  ["왼쪽 팔",'<rect x="196" y="176" width="48" height="150" rx="24" transform="rotate(14 220 176)"/>'],["오른쪽 팔",'<rect x="396" y="176" width="48" height="150" rx="24" transform="rotate(-14 420 176)"/>'],
+  ["왼쪽 손",'<circle cx="181" cy="344" r="22"/>'],["오른쪽 손",'<circle cx="459" cy="344" r="22"/>'],
+  ["왼쪽 허벅지",'<rect x="266" y="330" width="52" height="110" rx="24"/>'],["오른쪽 허벅지",'<rect x="322" y="330" width="52" height="110" rx="24"/>'],
+  ["왼쪽 무릎",'<circle cx="292" cy="448" r="18"/>'],["오른쪽 무릎",'<circle cx="348" cy="448" r="18"/>'],
+  ["왼쪽 종아리",'<rect x="268" y="462" width="48" height="80" rx="22"/>'],["오른쪽 종아리",'<rect x="324" y="462" width="48" height="80" rx="22"/>'],
+  ["왼쪽 발목",'<rect x="276" y="540" width="32" height="18" rx="8"/>'],["오른쪽 발목",'<rect x="332" y="540" width="32" height="18" rx="8"/>'],
+  ["왼쪽 발",'<rect x="254" y="556" width="70" height="32" rx="14"/>'],["오른쪽 발",'<rect x="318" y="556" width="70" height="32" rx="14"/>']];
+const TWIN_B = [
+  ["뒤통수",'<circle cx="320" cy="86" r="52"/>'],["목 뒤",'<rect x="306" y="124" width="28" height="34" rx="8"/>'],
+  ["왼쪽 팔꿈치",'<rect x="196" y="176" width="48" height="150" rx="24" transform="rotate(14 220 176)"/>'],["오른쪽 팔꿈치",'<rect x="396" y="176" width="48" height="150" rx="24" transform="rotate(-14 420 176)"/>'],
+  ["등",'<rect x="260" y="154" width="120" height="96" rx="28"/>'],["허리",'<rect x="266" y="250" width="108" height="48" rx="20"/>'],["엉덩이",'<rect x="260" y="298" width="120" height="52" rx="26"/>'],
+  ["왼쪽 허벅지 뒤",'<rect x="266" y="350" width="52" height="100" rx="24"/>'],["오른쪽 허벅지 뒤",'<rect x="322" y="350" width="52" height="100" rx="24"/>'],
+  ["왼쪽 종아리 뒤",'<rect x="268" y="452" width="48" height="90" rx="22"/>'],["오른쪽 종아리 뒤",'<rect x="324" y="452" width="48" height="90" rx="22"/>'],
+  ["왼쪽 발뒤꿈치",'<rect x="266" y="544" width="48" height="40" rx="14"/>'],["오른쪽 발뒤꿈치",'<rect x="326" y="544" width="48" height="40" rx="14"/>']];
+function bodyShapes(){ return view==="front" ? TWIN_F : TWIN_B; }
+// 쌍둥이 얼굴 덧그림 — 아바타 머리 모양 · 성별 따라 · pointer-events 없음(밑 조각이 눌림)
+function twinFace(back, mood){
+  const a0 = D.settings.av, a = Object.assign({}, a0, {hair: ({twin:"long", pony:"tied", curly:"bob", spiky:"short", mush:"bob"})[a0.hair] || a0.hair}), girl = a.sex==="girl", C = "#1fa796", F = "#bfe9e2", o = `stroke="${C}" stroke-width="3" stroke-linejoin="round"`;
+  if(back) return `<g pointer-events="none"><path d="M272 90 Q272 34 320 34 Q368 34 368 90 ${a.hair==="long"?"L372 180 Q360 190 350 180 L290 180 Q280 190 268 180":a.hair==="bob"?"L370 130 Q360 140 350 130 L290 130 Q280 140 270 130":"L368 110 Q360 118 350 110 L290 110 Q280 118 272 110"} Z" fill="${F}" ${o}/>${a.hair==="tied"?`<path d="M300 60 Q320 20 340 60 Q320 50 300 60 Z" fill="${F}" ${o}/>`:""}</g>`;
+  const hair = girl
+    ? `<path d="M272 90 Q270 34 320 34 Q370 34 368 90 Q360 62 342 62 Q334 76 320 72 Q310 60 296 72 Q286 62 272 90 Z" fill="${F}" ${o}/>`
+    : `<path d="M272 86 Q270 34 320 34 Q370 34 368 86 L360 78 L352 68 L342 80 L334 66 L322 78 L312 66 L302 78 L292 68 L284 80 L276 76 Z" fill="${F}" ${o}/>`;
+  const eyes = girl
+    ? `<ellipse cx="301" cy="108" rx="8.5" ry="10.5" fill="#fff" ${o}/><ellipse cx="339" cy="108" rx="8.5" ry="10.5" fill="#fff" ${o}/><circle cx="301" cy="109.5" r="6.4" fill="${C}"/><circle cx="339" cy="109.5" r="6.4" fill="${C}"/><circle cx="301" cy="111" r="3.3" fill="#0f5f55"/><circle cx="339" cy="111" r="3.3" fill="#0f5f55"/><circle cx="298.5" cy="105" r="2.5" fill="#fff"/><circle cx="336.5" cy="105" r="2.5" fill="#fff"/>`
+    : `<ellipse cx="301" cy="108" rx="5.5" ry="7" fill="#0f5f55"/><ellipse cx="339" cy="108" rx="5.5" ry="7" fill="#0f5f55"/><circle cx="299" cy="105.5" r="2" fill="#fff"/><circle cx="337" cy="105.5" r="2" fill="#fff"/>`;
+  return `<g pointer-events="none">${a.hair==="long"?`<path d="M268 96 L262 150 Q266 160 276 156 L276 120 Z M372 96 L378 150 Q374 160 364 156 L364 120 Z" fill="${F}" ${o}/>`:""}<circle cx="268" cy="100" r="7" fill="#e8f7ff" ${o}/><circle cx="372" cy="100" r="7" fill="#e8f7ff" ${o}/><ellipse cx="286" cy="121" rx="8" ry="4.5" fill="#ffb0b0" opacity=".5"/><ellipse cx="354" cy="121" rx="8" ry="4.5" fill="#ffb0b0" opacity=".5"/>${eyes}${MOUTH(mood, C)}${hair}${a.glasses?`<g fill="none" stroke="${C}" stroke-width="2.4"><rect x="288" y="98" width="26" height="20" rx="5"/><rect x="326" y="98" width="26" height="20" rx="5"/><path d="M314 108 h12"/></g>`:""}</g>`;
+}
+// 기분에 따른 입 — fine(기본 · 활짝) · better(살짝 웃음) · hurt(일자 입) · bad(찡그림 + 땀)
+function MOUTH(mood, C){
+  const o = `fill="none" stroke="${C}" stroke-width="3" stroke-linecap="round"`;
+  if(mood==="bad") return `<path d="M308 135 Q320 123 332 135" ${o}/><path d="M286 96 L298 101 M354 96 L342 101" ${o}/><path d="M360 84 q7 11 0 16 q-7 -5 0 -16z" fill="#7cc4f5"/>`;
+  if(mood==="hurt") return `<path d="M310 130 L330 130" ${o}/>`;
+  if(mood==="better") return `<path d="M311 126 Q320 134 329 126" ${o}/>`;
+  return `<path d="M310 125 Q320 137 330 125 Z" fill="#fff" stroke="${C}" stroke-width="2.4" stroke-linejoin="round"/>${mood==="fine"?`<path d="M380 60 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z M256 72 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#ffcf4a"/>`:""}`;
+}
+// 쌍둥이 그림 안 아픈 부위 자리에 점 · 붕대 — l 0 없음 · 1 작게(노랑) · 2 보통(주황 + 작은 붕대) · 3 크게(빨강 + 붕대) · 그려진 뒤 부위 모양의 자리를 재서 (v0.6)
+function painAt(inn, part, l){
+  if(!inn || !l) return; const el = inn.querySelector(`[data-p="${part || "배"}"]`) || inn.querySelector(`[data-p="배"]`); if(!el) return;
+  const b = el.getBBox(), cx = b.x + b.width/2, cy = b.y + b.height/2, ns = "http://www.w3.org/2000/svg";
+  const mk = (t, at) => { const e = document.createElementNS(ns, t); Object.entries(at).forEach(([k,v]) => e.setAttribute(k, v)); inn.appendChild(e); };
+  if(l >= 2) mk("rect", {x:cx-28, y:cy-12, width:56, height:24, rx:7, fill:"#fff", stroke:"#9bb0c0", "stroke-width":3, transform:`rotate(-20 ${cx} ${cy})`});
+  if(l === 1) mk("rect", {x:cx-18, y:cy-7, width:36, height:14, rx:5, fill:"#fff", stroke:"#cfd8e0", "stroke-width":2.5, transform:`rotate(-20 ${cx} ${cy})`});
+  mk("circle", {cx, cy, r:[0,9,16,24][l], fill:["","#ffcf4a","#f28b1e","#d93025"][l], stroke:"#fff", "stroke-width":5, class:l>=2?"paindot":""});
+}
+// 쌍둥이 겉모습(앞) — 눌리지 않는 그림용(보건실 작은 쌍둥이 · 앞날 예측) · data-p 로 부위 자리를 찾음
+function twinOutline(mood){ return TWIN_F.map(([n,s]) => s.replace("/>", ` data-p="${n}" fill="#e8f7ff" stroke="#1fa796" stroke-width="5"/>`)).join("") + twinFace(false, mood); }
+const DESK = `<rect x="150" y="450" width="150" height="20" fill="#c9a37a"/><rect x="158" y="470" width="134" height="76" fill="#bf9765"/><rect x="158" y="470" width="10" height="90" fill="#a98357"/><rect x="282" y="470" width="10" height="90" fill="#a98357"/><rect x="200" y="486" width="50" height="8" rx="3" fill="#a98357"/>`;   // 책상(앞판 있음 · 선생님 아랫몸을 가림)
+function drawRoom(){
+  const color = cur.ai ? cur.ai.color : "";
+  const examSay = color==="빨강" ? "많이 아프겠어요 — 지금 바로 어른 · 병원이에요" : color==="노랑" ? "쉬면서 보되 며칠 안에 병원에 가요" : color==="초록" ? "쉬면 괜찮아질 거예요 · 얼음 15분" : hasSym() ? "어디가 아픈지 볼게요 … 선생님 화면에서 더 말해 줘요" : "먼저 몸 쌍둥이에서 아픈 곳을 눌러 주면 잘 볼 수 있어요";
+  const A = ACTS[act] || ACTS.bed, T = A.t, M = A.m, lie = act === "bed";
+  const fever = cur.how.some(h=>/열|감기|목 아픔|두통|어지러움/.test(h)), hgt = 152 + (D.settings.nick.length * 7 + D.cases.length * 3) % 21;
+  const vars = (g, dx, dy) => g.replace('class="anim-me goto"', `class="anim-me goto" style="--dx:${dx}px;--dy:${dy}px"`).replace('class="anim-teacher tgoto"', `class="anim-teacher tgoto" style="--dx:${dx}px;--dy:${dy}px"`);
+  let me, teacher, props = "";   // 책상 · 침대보다 먼저 그려 아랫몸이 가려짐
+  if(rst === 0){ me = meSvg(90, 500, "anim-me" + (walked ? " idle" : "")); teacher = teacherSvg(225, 372, "anim-teacher"); }
+  else if(rst === 1){ me = vars(meSvg(90, 500, "anim-me goto"), M[0]-90, M[1]-500); teacher = teacherSvg(225, 372, "anim-teacher"); }
+  else {
+    me = lie ? `<g class="anim-lie"><g transform="translate(418,506) rotate(-90)">${meSvg(0, 0, "")}</g><rect x="452" y="478" width="150" height="58" rx="12" fill="#cfe4f7" opacity=".92"/></g>` : meSvg(M[0], M[1], "anim-me idle");
+    teacher = !T ? teacherSvg(225, 372, "anim-teacher") : rst === 2 ? vars(teacherSvg(225, 372, "anim-teacher tgoto"), T[0]-225, T[1]-372) : teacherSvg(T[0], T[1], "anim-exam", lie);
+    if(rst === 3 && A.p) props = A.p(fever, mePt(cur.part), hgt);
+  }
+  const say = lie ? examSay : A.say ? A.say(fever, mePt(cur.part), hgt) : "";
+  const front = !!T && !lie && rst >= 2;   // 서서 하는 동작 — 선생님을 침대 앞에 (v0.6g · 키 재기 때 침대 뒤에 가려짐)
+  $("room").innerHTML = `<svg viewBox="0 0 640 666" preserveAspectRatio="xMidYMax slice">
+    <rect width="640" height="430" fill="#dff0ff"/><rect y="430" width="640" height="236" fill="#f3e6d2"/><rect y="424" width="640" height="10" fill="#c9a37a"/>
+    <rect x="40" y="60" width="200" height="170" rx="8" fill="#fff8d8" stroke="#fff" stroke-width="10"/><line x1="140" y1="60" x2="140" y2="230" stroke="#fff" stroke-width="8"/><line x1="40" y1="145" x2="240" y2="145" stroke="#fff" stroke-width="8"/><circle class="anim-sun" cx="200" cy="100" r="22" fill="#ffcf4a"/>
+    <rect x="290" y="120" width="130" height="200" rx="6" fill="#fff" stroke="#9fb3c8" stroke-width="3"/><line x1="290" y1="186" x2="420" y2="186" stroke="#9fb3c8" stroke-width="3"/><line x1="290" y1="252" x2="420" y2="252" stroke="#9fb3c8" stroke-width="3"/>
+    <rect x="302" y="136" width="22" height="36" fill="#9ad0ff"/><rect x="334" y="136" width="22" height="36" fill="#ffb3a7"/><rect x="366" y="136" width="22" height="36" fill="#ffe08a"/><rect x="302" y="200" width="50" height="36" fill="#cde8d2"/><rect x="362" y="200" width="40" height="36" fill="#f9d6ea"/><rect x="302" y="266" width="100" height="36" fill="#e9eef5"/>
+    <rect x="318" y="100" width="74" height="20" rx="4" fill="#2457c5"/><text x="355" y="115" text-anchor="middle" font-size="13" fill="#fff" font-family="Jua">보 건 실</text>
+    ${front ? "" : teacher}
+    <g style="cursor:pointer" onclick="rest()"><rect x="380" y="470" width="230" height="80" rx="10" fill="#fff" stroke="#9fb3c8" stroke-width="3"/><rect x="380" y="452" width="70" height="36" rx="10" fill="#e9eef5" stroke="#9fb3c8" stroke-width="3"/><rect x="388" y="556" width="14" height="50" fill="#9fb3c8"/><rect x="588" y="556" width="14" height="50" fill="#9fb3c8"/></g>
+    ${front ? teacher : ""}
+    ${DESK}
+    <g class="anim-twin" onclick="go(2)"><rect x="460" y="120" width="150" height="230" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(422,122) scale(.355)">${twinOutline(hasSym()?"hurt":"fine")}</g></g>
+    ${me}${props}
+    <rect x="590" y="380" width="36" height="44" rx="4" fill="#c9a37a"/><ellipse class="anim-plant" cx="608" cy="372" rx="28" ry="18" fill="#5fb36b"/></svg>
+    ${rst>=2 && T ? '' : '<div class="lbl" style="left:25%;top:48%">보건 선생님 (AI)</div>'}<div class="lbl tw" style="left:66%;top:12%">내 몸 쌍둥이</div>${rst===0?`<div class="lbl me" style="left:9%;top:88%">나 · ${esc(D.settings.nick)}</div>`:""}
+    ${rst===0 ? `<div class="bubble" style="left:3%;top:37%">어서 와요. 어디가 아픈가요?<br>몸 쌍둥이를 눌러 알려 줘요</div>` : rst===3 ? `<div class="bubble" style="left:3%;top:${T?"22%":"30%"}">${esc(say)}</div><button class="b" style="position:absolute;right:4%;bottom:5%" onclick="rst=0;drawRoom()">🙂 다 했어요</button>` : ""}`;
+  $("actBtns").innerHTML = Object.entries(ACTS).map(([k,a])=>`<button class="b${act===k&&rst?" sel":""}" style="font-size:14px;padding:6px 4px" onclick="doAct('${k}')">${a.n}</button>`).join("");
+  painAt($("room").querySelector("g.anim-twin g.in"), cur.part, hasSym() ? 2 : 0);
+  $("p1Teacher").style.opacity = hasSym() ? "1" : ".45"; $("p1Next").textContent = hasSym() ? "👩‍⚕️ ③ 선생님에게 보여 주기" : "🧍 ② 내 몸 쌍둥이 — 여기서 시작"; drawNav();
+  walked = true;
+  drawAv();
+  const last = D.cases[D.cases.length-1];
+  $("todayKv").innerHTML = `<div class="kv"><span>지금까지 사례</span><b>${D.cases.length}건${average()!=null?" · 평균 "+average()+"점":""}</b></div>
+    <div class="kv"><span>쌍둥이 상태</span><b>${hasSym() ? esc(partLabel(cur))+(cur.ai?" · "+cur.ai.color:" · 보는 중") : "아픈 곳 없음"}</b></div>
+    <div class="kv"><span>세 AI 비교 적은 사례</span><b>${D.cases.filter(c=>threeCols(c).length>=2).length}건</b></div>
+    ${last?`<div class="kv"><span>마지막 사례</span><b>${last.id}번 ${esc(partLabel(last))} · ${last.ai?last.ai.color:"—"}</b></div>`:""}`;
+}
+// 동작 — 내가 걸어가고(1.2초) 선생님이 오고(1.2초 · 안 오는 동작도 있음) 소품 + 말 · 「다 했어요」 로 돌아옴
+let restTok = 0;
+function rest(){ doAct("bed"); }
+function doAct(k){
+  if(rst && act === k) return; act = k; const tok = ++restTok; rst = 1; sfx("whoosh"); drawRoom();
+  setTimeout(()=>{ if(tok!==restTok||page!==1) return; rst = 2; drawRoom(); setTimeout(()=>{ if(tok!==restTok||page!==1) return; rst = 3; sfx("pop"); drawRoom(); const bb = $("room").querySelector(".bubble"); if(bb) speak(bb.innerText); }, ACTS[k].t ? 1300 : 60); }, 1300);
+}
+// 아바타 꾸미기 칸 — 고르면 바로 저장 · 모든 장면에 같은 모습
+function drawAv(){
+  const a = D.settings.av;
+  const ch = (k,v,t) => `<button class="b sm${a[k]===v?" sel":""}" onclick="setAv('${k}','${v}')">${t}</button>`;
+  const sw = (k,v) => `<i class="sw${a[k]===v?" sel":""}" style="background:${v}" onclick="setAv('${k}','${v}')"></i>`;
+  $("avUi").innerHTML = `<div class="avrow"><span class="cl">성별</span>${ch("sex","girl","여")}${ch("sex","boy","남")}<span class="cl" style="margin-left:8px">옷</span>${FITS.map(([v,t])=>ch("fit",v,t)).join("")}</div>
+    <div class="avrow"><span class="cl">머리</span>${HAIRS.map(([v,t])=>ch("hair",v,t)).join("")}</div>
+    <div class="avrow"><span class="cl">머리색</span>${["#3b2a20","#1a1a1a","#6b3f1f","#b5651d","#e0b060","#8a4fff","#e85d8a","#2aa4c9"].map(v=>sw("hairc",v)).join("")}<span class="cl" style="margin-left:8px">피부</span>${["#ffe3c8","#ffd9b8","#f4c9a0","#e0a97a","#b07a4e"].map(v=>sw("skin",v)).join("")}</div>
+    <div class="avrow"><span class="cl">옷 색</span>${["#f1e6cf","#cfe6f7","#c9efe4","#f9d6e3","#ffe08a","#2b3a66","#3a3f4a","#d93025","#5fb36b","#8a4fff"].map(v=>sw("top",v)).join("")}</div>
+    <div class="avrow"><span class="cl">아래 색</span>${["", "#2b3a66","#8d93a0","#3a3f4a","#4a6fa5","#c9a37a","#f9d6e3","#d93025"].map(v=>v?sw("bot",v):`<button class="b sm${!a.bot?" sel":""}" onclick="setAv('bot','')">기본</button>`).join("")}<span class="cl" style="margin-left:8px">신발</span>${["#3a2a22","#fff","#d93025","#2457c5","#1a1a1a"].map(v=>sw("shoe",v)).join("")}</div>
+    <div class="avrow"><span class="cl">눈 색</span>${["#3b7dd8","#6b4a2e","#2e8b57","#2a2a2a","#8a4fff"].map(v=>sw("eyec",v)).join("")}<span class="cl" style="margin-left:8px">소품</span>${ACCS.map(([v,t])=>ch("acc",v,t)).join("")}${ch("glasses",true,"안경")}<button class="b sm dim" onclick="randAv()">🎲 마음대로</button></div>`;
+}
+function randAv(){   // 아무거나 한 벌
+  const pick = l => l[Math.floor(Math.random()*l.length)], a = D.settings.av;
+  a.sex = pick(["girl","boy"]); a.hair = pick(HAIRS)[0]; a.fit = pick(FITS)[0]; a.acc = pick(ACCS)[0]; a.glasses = Math.random() < .25;
+  a.hairc = pick(["#3b2a20","#1a1a1a","#6b3f1f","#b5651d","#e0b060","#8a4fff","#e85d8a","#2aa4c9"]); a.skin = pick(["#ffe3c8","#ffd9b8","#f4c9a0","#e0a97a","#b07a4e"]);
+  a.top = pick(["#f1e6cf","#cfe6f7","#c9efe4","#f9d6e3","#ffe08a","#2b3a66","#3a3f4a","#d93025","#5fb36b","#8a4fff"]); a.bot = pick(["","#2b3a66","#8d93a0","#4a6fa5","#c9a37a","#f9d6e3"]); a.shoe = pick(["#3a2a22","#fff","#d93025","#2457c5"]); a.eyec = pick(["#3b7dd8","#6b4a2e","#2e8b57","#2a2a2a"]);
+  save(); sfx("chime"); drawRoom();
+}
+function setAv(k, v){ if(v==="true") v = true; if(v==="false") v = false; if(k === "glasses") v = !D.settings.av.glasses; D.settings.av[k] = v; save(); sfx("pop"); drawRoom(); }
+
+function drawBody(){
+  const shapes = bodyShapes();
+  $("bodyScene").innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet">
+    ${shapes.map(([n,s]) => s.replace("/>", ` class="part${cur.parts.includes(n)?" on":""}" data-part="${n}" onclick="pickPart('${n}')"><title>${n}</title></${s.match(/^<(\w+)/)[1]}>`)).join("")}${twinFace(view==="back")}
+    ${cur.parts.length?`<text x="30" y="600" font-size="24" fill="#d93025" font-family="Jua">${esc(cur.parts.join(" · "))}</text>`:""}
+    <text x="470" y="600" font-size="16" fill="#5f6b78" font-family="Jua" style="cursor:pointer" onclick="setView('${view==="front"?"back":"front"}')">🔄 ${view==="front"?"뒤로 돌리기":"앞으로 돌리기"}</text></svg>
+    <div class="lbl tw" style="left:3%;top:3%">내 몸 쌍둥이 · ${view==="front"?"앞 — 머리 · 팔 · 배 · 다리 · 발을 눌러요":"뒤 — 등 · 허리 · 엉덩이 · 뒤꿈치를 눌러요"}</div>`;
+  syncSpots();
+  const sp = cur.spots, A = sp[spotI] || null, spotName = x => x.part || "몸 안";
+  $("partTitle").innerHTML = sp.length
+    ? `${sp.map((x,i)=>`<span class="b sm${i===spotI?" sel":""}" style="font-size:15px;padding:5px 9px;cursor:pointer" onclick="actSpot(${i})" title="누르면 이 곳을 고쳐요">${i===0&&sp.length>1?"★ ":""}${esc(spotName(x))}<small style="opacity:.8"> ${x.how.length+x.since.length ? (x.how.length+x.since.length)+"개" : "비었음"}</small> <b onclick="event.stopPropagation();delSpot(${i})" style="padding:0 2px">✕</b></span>`).join("")}<button class="b sm dim" onclick="clearParts()">모두 지우기</button>`
+    : `아픈 곳을 눌러요 <small>셋까지 · 한 곳씩 차례로 · 몸 안이 아프면 「몸이 아파요」 칩만</small>`;
+  $("stepHint").innerHTML = !sp.length ? `① 쌍둥이에서 아픈 곳을 눌러요` : A ? `② <b>${esc(spotName(A))}</b> — 어떻게 · 언제 · 지금 상태를 누르고 → ③ 아래 <b>✔ 저장</b>` : `✔ 저장됨 (${sp.length}곳) — 다른 곳도 아프면 <b>쌍둥이에서 그곳을</b> 눌러요 · 다 됐으면 아래 「선생님에게」 ${sp.length>1?"· ★ 첫 번째가 주된 곳":""} · 위 이름을 누르면 고쳐요`;
+  $("howTitle").innerHTML = `<span class="no">1</span>${A ? esc(spotName(A))+" 는 " : ""}어떻게 아픈가요 <span class="hint">여러 개 눌러도 돼요${A ? "" : " · 먼저 쌍둥이를 눌러요"}</span>`;
+  const chips = (id, list, k, cls) => $(id).innerHTML = list.map(h=>`<button class="b ${cls}${A&&A[k].includes(h)?" sel":""}" onclick="tog('${k}','${h}')">${h}</button>`).join("");
+  chips("howChips", howFor(A && A.part ? [A.part] : []), "how", ""); chips("sickChips", SICK, "how", ""); chips("whenChips", WHEN, "since", "mint"); chips("stateChips", STATE, "since", "mint");
+  $("howLbl").textContent = A && A.part ? "그 부위는" : "다쳤어요";
+  $("nextSpotRow").style.display = A && (A.how.length || A.since.length) ? "flex" : "none";
+  $("toTeacher").style.opacity = A ? ".55" : "1"; drawNav();
+  $("symText").value = cur.text;
+  $("frontBtn").classList.toggle("sel", view==="front"); $("backBtn").classList.toggle("sel", view==="back");
+  $("toTeacher").disabled = !hasSym();
+}
+// v0.6 — 부위별 묶음(spots) : 한 곳 누르고 → 어떻게 · 언제 · 상태 채운 뒤 → 다음 곳 (전무님 10-21 밤 «그 다음 부위로 넘어가게끔 순서»)
+let spotI = -1;   // 지금 채우는 묶음 번호
+function syncSpots(){   // spots → parts · part · side · how · since (옛 코드 · 질문 글 · 탐구 벽이 그대로 쓰게)
+  cur.spots = cur.spots || []; cur.parts = cur.spots.filter(x=>x.part).map(x=>x.part); cur.part = cur.parts[0] || "";
+  cur.side = /왼쪽/.test(cur.part)?"왼":/오른쪽/.test(cur.part)?"오른":"";
+  cur.how = [...new Set(cur.spots.flatMap(x=>x.how))]; cur.since = [...new Set(cur.spots.flatMap(x=>x.since))];
+  if(spotI >= cur.spots.length) spotI = cur.spots.length - 1;
+}
+function pickPart(n){ sfx("tap");   // 셋까지 · 한 곳씩 : 비어 있는 활성 묶음이면 부위만 바꿈 · 채웠으면 새 묶음 · 같은 곳 다시 누르면 빠짐
+  if(cur.ai){ cur = newCase(); spotI = -1; }
+  const sp = cur.spots, i = sp.findIndex(x=>x.part===n), A = sp[spotI];
+  if(i>=0){ if(i===spotI){ sp.splice(i,1); spotI = sp.length-1; toast(n+" 을 뺐어요"); } else { spotI = i; toast(n+" 을 고쳐요"); } }
+  else if(A && A.part && !A.how.length && !A.since.length){ A.part = n; }
+  else { if(sp.filter(x=>x.part).length>=3) return toast("아픈 곳은 셋까지 — 위 이름의 ✕ 로 하나를 빼요"); sp.push({part:n, how:[], since:[]}); spotI = sp.length-1; if(sp.length>1) toast(n+" — 이 곳은 어떻게 아픈가요?"); }
+  drawBody();
+}
+function actSpot(i){ spotI = i; drawBody(); }
+function restart(){ sfx("whoosh"); cur = newCase(); spotI = -1; askDraft = ""; needColor = false; tl = "d3"; view = "front"; go(2); drawBody(); drawTop(); toast("처음부터 — 쌍둥이에서 아픈 곳을 눌러요"); }
+function delSpot(i){ cur.spots.splice(i,1); spotI = Math.min(spotI, cur.spots.length-1); if(spotI<0) spotI = cur.spots.length-1; drawBody(); }
+function doneSpot(){   // 한 곳 다 적음 → 저장(활성 해제) → 다음 곳은 쌍둥이에서 (v0.6 · 전무님 «저장을 해야 다음 걸»)
+  const A = cur.spots[spotI]; if(!A || !(A.how.length || A.since.length)) return toast("어떻게 · 언제 · 지금 상태를 먼저 눌러요");
+  const n = A.part || "몸 안"; spotI = -1; sfx("chime"); drawBody();
+  toast(n + " 저장 — 다른 곳도 아프면 쌍둥이에서 누르고, 아니면 「선생님에게」"); speak(n + " 저장했어요. 다른 곳도 아프면 쌍둥이에서 눌러요.");
+}
+function setView(v){ view = v; drawBody(); }
+function clearParts(){ cur.spots = []; spotI = -1; drawBody(); }
+function tog(k, v){ sfx("pop");   // 활성 묶음의 칩 · 묶음이 없는데 「몸이 아파요」 칩이면 몸 안 묶음을 만듦
+  let A = cur.spots[spotI];
+  if(!A){ if(k==="how" && SICK.includes(v)){ cur.spots.push({part:"", how:[], since:[]}); spotI = cur.spots.length-1; A = cur.spots[spotI]; } else return toast("먼저 쌍둥이에서 아픈 곳을 눌러요 (몸 안이면 「몸이 아파요」 칩부터)"); }
+  const a = A[k]; const i = a.indexOf(v); i<0 ? a.push(v) : a.splice(i,1); drawBody();
+}
+
+function drawTeacher(){
+  const open = cur.qa.find(x=>!x.a), done = cur.qa.length && cur.qa.every(x=>x.a), last = [...cur.qa].reverse().find(x=>x.a);
+  const say = busy ? "음… 몇 가지만 더 물어볼게요" : !hasSym() ? "먼저 몸 쌍둥이에서 아픈 곳을 눌러요" : open ? esc(open.q) : done ? "고마워요 — 이제 AI 에게 물어봐요. 답을 가져오면 쌍둥이가 앞날을 보여 줄게요" : esc(partLabel(cur)) + " 이야기를 들려줘요";
+  $("teacherScene").innerHTML = `<svg viewBox="0 0 640 666" preserveAspectRatio="xMidYMax slice">
+    <rect width="640" height="430" fill="#dff0ff"/><rect y="430" width="640" height="236" fill="#f3e6d2"/><rect y="424" width="640" height="10" fill="#c9a37a"/>
+    <g class="anim-twin" style="cursor:pointer" onclick="go(2)"><rect x="470" y="86" width="140" height="215" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(434,88) scale(.33)">${twinOutline(hasSym() ? "hurt" : "fine")}</g></g>
+    ${teacherSvg(225, 372, "anim-teacher" + (busy ? " busy" : ""))}${DESK}
+    ${meSvg(470, 500, "anim-me idle")}</svg>
+    <div class="lbl" style="left:25%;top:48%">보건 선생님 (AI)</div><div class="lbl tw" style="left:74%;top:9%">내 몸 쌍둥이</div><div class="lbl me" style="left:68%;top:88%">나 · ${esc(D.settings.nick)}</div>
+    <div class="bubble" style="left:3%;top:${open || done ? "20%" : "30%"}">${say}</div>
+    ${last && !busy ? `<div class="bubble me" style="right:3%;left:auto;top:54%;max-width:34%">${esc(last.a)}</div>` : ""}`;
+  painAt($("teacherScene").querySelector("g.anim-twin g.in"), cur.part, hasSym() ? 2 : 0);
+  const c = $("qaCard");
+  if(!hasSym()){ c.innerHTML = `<div class="hint">아직 아픈 곳이 없어요 → <button class="b" onclick="go(2)">🧍 몸 쌍둥이</button></div>`; $("toPredict").disabled = true; return; }
+  let h = `<div class="who">🙂 나</div><div class="bub me">${esc(partLabel(cur))} · ${esc([...cur.how, ...cur.since].join(" · ")||"—")}${cur.text?"<br>"+esc(cur.text):""}</div>`;
+  if(busy) h += `<div class="who">👩‍⚕️ 보건 선생님</div><div class="bub ai"><span class="busy"></span>생각하는 중 <span class="thinking"></span></div>`;
+  cur.qa.forEach((x,i)=>{
+    h += `<div class="who">👩‍⚕️ 보건 선생님</div><div class="bub ai">${esc(x.q)}</div><div>${x.options.map(o=>`<button class="b${x.a===o?" sel":""}" onclick="answer(${i},'${esc(o).replace(/'/g,"&#39;")}')">${esc(o)}</button>`).join("")}<button class="b dim${x.a==="모르겠어요"?" sel":""}" onclick="answer(${i},'모르겠어요')">모르겠어요</button></div>`;
+  });
+  if(cur.qa.length && cur.qa.every(x=>x.a)) h += `<div class="hint" style="margin-top:8px">답을 다 골랐어요 → 아래 단추</div>`;
+  c.innerHTML = h; c.scrollTop = 1e6;
+  $("toPredict").disabled = !(cur.qa.length && cur.qa.every(x=>x.a));
+}
+function answer(i, o){ cur.qa[i].a = o; sfx("pop"); drawTeacher(); drawNav(); const nx = cur.qa.find(x=>!x.a); speak(nx ? nx.q : "고마워요. 이제 AI 에게 물어봐요."); }
+
+function drawPred(){
+  const a = cur.ai; const S = $("predScene"), P = $("predSide");
+  if(!a){ drawAsk(S, P); return; }
+  const colOf = {today:a.color, d3:a.color, w1:a.color==="빨강"?"노랑":"초록", w2:"초록"}; const hex = {초록:"#1e9e5a",노랑:"#e0a100",빨강:"#d93025"};
+  // pop 움직임(CSS transform)이 같은 g 의 속성 transform 을 덮어 그림이 원래 크기로 커지던 함정(v0.2~0.3) → 겉 g 에 움직임 · 속 g 에 자리
+  // 단계마다 아픈 정도 3(많이) → 0(다 나음) : 색에 따라 — 점 크기 · 색 · 표정 · 붕대 · 한 줄 말이 달라짐 (v0.6 · 전무님 «그림이 다 똑같아»)
+  const KS = ["today","d3","w1","w2"], LV = ({초록:[2,1,0,0], 노랑:[3,2,1,0], 빨강:[3,3,2,1]})[a.color] || [2,1,0,0], lv = k => LV[KS.indexOf(k)];
+  const MOOD = ["fine","better","hurt","bad"], WORD = ["😄 다 나았어요","🙂 거의 나았어요","😐 아직 아파요","😣 많이 아파요"];
+  const fig = (x,y,s,k,op) => `<g class="${op===1?"predfig":""} stage" data-lv="${lv(k)}" opacity="${op}"><g class="in" transform="translate(${x},${y}) scale(${s})">${twinOutline(MOOD[lv(k)])}</g></g>`;
+  const names = {today:"오늘", d3:"3일 뒤", w1:"1주 뒤", w2:"2주 뒤"};
+  S.innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet"><rect width="640" height="620" fill="#f2fbfc"/>
+    ${fig(20,150,.42,"today",.55)}<text x="100" y="130" font-size="18" fill="#5f6b78" font-family="Jua" text-anchor="middle">오늘</text><text x="100" y="440" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">${WORD[lv("today")]}</text>
+    ${fig(140,50,.78,tl,1)}<text x="320" y="36" font-size="22" fill="#1f2630" font-family="Jua" text-anchor="middle">${names[tl]} · 선생님 예측</text>
+    ${fig(470,150,.42,"w2",.55)}<text x="545" y="130" font-size="18" fill="#5f6b78" font-family="Jua" text-anchor="middle">2주 뒤</text><text x="545" y="440" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">${WORD[lv("w2")]}</text>
+    <text x="320" y="546" font-size="24" fill="#1f2630" font-family="Jua" text-anchor="middle">${names[tl]} — ${WORD[lv(tl)]}</text>
+    <text x="320" y="572" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">점이 작아지고 · 붕대가 사라지고 · 표정이 밝아지면 나아가는 것 · 오른쪽 시간 줄을 눌러 넘겨요</text>
+    <text x="320" y="594" font-size="14" fill="#d93025" font-family="Jua" text-anchor="middle">${esc((a.red||[]).slice(0,2).join(" · "))} → 빨강 · 바로 병원</text></svg>`;
+  S.querySelectorAll("g.stage").forEach(g => painAt(g.querySelector("g.in"), cur.part, +g.dataset.lv));
+  P.innerHTML = `<div class="card c-${a.color}"><div class="light"><div class="dots">${COLORS.map(c=>`<i class="${{초록:"g",노랑:"y",빨강:"r"}[c]}${a.color===c?" on":""}"></i>`).join("")}</div><div><b>${a.color} · ${{초록:"집에서 돌봐도 돼요",노랑:"며칠 안에 병원",빨강:"지금 바로 병원 · 어른에게"}[a.color]}</b><div class="hint">${esc(a.diag)} · ${esc(a.why)}</div></div></div></div>
+    <div class="card"><div class="time">${["today","d3","w1","w2"].map(k=>`<div class="${k===tl?"on":""}${["today","d3","w1","w2"].indexOf(k)<["today","d3","w1","w2"].indexOf(tl)?" done":""}" onclick="tl='${k}';drawPred()">${names[k]}</div>`).join("")}</div></div>
+    <div class="card"><h3><span class="no">${names[tl]}</span>쌍둥이는 이렇게 될 거예요</h3><div class="kv"><span>몸</span><b>${esc(a.timeline[tl]||"—")}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
+    <div class="card"><h3><span class="no">💡</span>지금 할 수 있는 것</h3><div class="hint">${esc((a.care||[]).join(" · "))}</div><div class="hint" style="color:#8a1f17;margin-top:4px">빨강 신호 : ${esc((a.red||[]).join(" · "))}</div></div>
+    <div class="hint">답한 것 : ${esc(a.model)} · ${fmt(a.at)}</div>
+    <div class="row" style="margin-top:auto"><button class="big" style="margin:0;flex:1" onclick="saveCase()" ${cur.id?"disabled":""}>${cur.id?"📌 사례 "+cur.id+"번으로 저장됨":"📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🆕 다음 사례 (처음부터)</button>`:`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="cur.ai=null;drawPred()">↩ 다시 묻기</button>`}</div>`;
+}
+// AI 에게 묻기 상자 — ① 질문 글 복사 · AI 열기 ② 답 붙여 넣기 → 읽어서 쌍둥이에 (전무님 10-21 «무료 AI · GPT 익숙 · 질문 글 만들어 주고 답을 받아 넣는 꼴»)
+let askDraft = "", needColor = false;
+const AI_URL = {"GPT":"https://chatgpt.com/", "제미나이":"https://gemini.google.com/app", "클로드":"https://claude.ai/new"};
+function drawAsk(S, P){
+  const ready = cur.qa.length && cur.qa.every(x=>x.a);
+  S.innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet"><rect width="640" height="620" fill="#f2fbfc"/><g opacity=".45"><g transform="translate(140,50) scale(.78)">${twinOutline()}</g></g>
+    <text x="320" y="330" text-anchor="middle" font-size="96" fill="#1fa796" font-family="Jua" opacity=".8">?</text>
+    <text x="320" y="592" text-anchor="middle" font-size="18" fill="#5f6b78" font-family="Jua">${ready ? "AI 답을 붙여 넣으면 쌍둥이가 앞날을 보여 줘요" : "먼저 선생님 되묻기에 답해요"}</text></svg>`;
+  if(!ready){ P.innerHTML = `<h2>앞날 예측</h2><div class="hint">선생님과 이야기한 뒤에 볼 수 있어요 → <button class="b" onclick="go(3)">👩‍⚕️ 선생님</button></div>`; return; }
+  const chip = n => `<button class="b sm${D.settings.ai===n?" sel":""}" onclick="D.settings.ai='${n}';save();drawPred()">${n}</button>`;
+  P.innerHTML = `<h2>AI 에게 묻기 <small>질문 글 복사 → AI 에 붙여 넣기 → 답을 여기에 · 무료 판이면 돼요</small></h2>
+    <div class="card"><h3><span class="no">1</span>질문 글을 복사해 AI 에 붙여 넣어요</h3>
+      <div class="row"><button class="big" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button></div>
+      <div class="row" style="margin-top:6px"><span class="hint">AI 열기</span>${Object.keys(AI_URL).map(n=>`<button class="b" onclick="openAi('${n}')">${n}</button>`).join("")}<span class="hint">새 창 · 붙여 넣고 보내기</span></div>
+      <details style="margin-top:8px"><summary class="b sm dim" style="list-style:none;display:inline-block;cursor:pointer">👁 질문 글 미리 보기 (누르면 펼침)</summary><pre style="white-space:pre-wrap;font:13px/1.5 'Noto Sans KR';background:#f6f8fb;border-radius:8px;padding:8px;margin:6px 0 0;max-height:180px;overflow:auto">${esc(askText(cur))}</pre></details></div>
+    <div class="card"><h3><span class="no">2</span>AI 답을 통째로 붙여 넣어요</h3>
+      <div class="row"><span class="hint">누가 답했나</span>${["GPT","제미나이","클로드","그 밖"].map(chip).join("")}</div>
+      <textarea id="ansIn" rows="7" placeholder="AI 답을 그대로 붙여 넣어요 — 예상 · 긴급도 · 까닭 · 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 · 할 것 · 빨강 신호" oninput="askDraft=this.value" style="margin-top:6px">${esc(askDraft)}</textarea>
+      ${needColor ? `<div class="row" style="margin-top:6px"><span class="hint" style="color:#8a1f17">긴급도 색을 못 찾았어요 — AI 가 말한 색을 골라요</span>${COLORS.map(c=>`<button class="b sm" onclick="readAnswer('${c}')">${c}</button>`).join("")}</div>` : ""}
+      <div class="row" style="margin-top:8px"><button class="big" style="margin:0;flex:1" onclick="readAnswer()">🔎 읽어서 쌍둥이에 넣기</button></div>
+      <div class="hint" style="margin-top:4px">못 읽은 줄은 「—」 · 긴급도 색(초록/노랑/빨강)만 꼭 · 답은 사례에 그대로 남아요</div></div>
+    <div class="row" style="margin-top:auto"><button class="b dim" onclick="useTest()">시험 답으로 보기 (연습)</button>${hasKey()?`<button class="b" onclick="directAsk()">⚡ 클로드 열쇠로 바로 묻기</button>`:""}<button class="b dim" onclick="go(3)">↩ 되묻기로</button></div>`;
+}
+// 질문 글 — 어느 AI 에 붙여 넣어도 같은 9줄 꼴로 답하게
+function askText(c){
+  return `너는 고등학교 보건실 선생님 역할이야. 아래 학생 상황을 보고 고등학생이 알아듣는 짧고 다정한 말로 답해 줘. 네 답이 의사 진단이 아니라는 건 알고 있어.
+
+[학생 상황]
+${caseText(c)}
+
+[규칙]
+- 긴급도는 초록(집에서 돌봄) · 노랑(며칠 안에 병원) · 빨강(지금 바로 병원) 셋 중 하나 · 애매하면 더 안전한 색으로
+- 머리 · 목 · 척추 · 숨 · 의식 · 심한 피 · 모양이 달라짐 · 뼈 통증 · 감각 없음은 빨강
+- 약 이름이나 약을 먹으라는 말은 하지 않기
+
+[답 꼴 — 아래 9줄만, 이 순서와 이 이름 그대로, 다른 말 없이]
+예상 : (예상되는 상태 이름 하나)
+긴급도 : (초록/노랑/빨강 중 하나)
+까닭 : (그렇게 본 까닭 한 문장)
+오늘 : (오늘 몸 상태 한 문장)
+3일 뒤 : (한 문장)
+1주 뒤 : (한 문장)
+2주 뒤 : (한 문장)
+할 것 : (지금 할 수 있는 것 3~4개, 쉼표로)
+빨강 신호 : (바로 병원 가야 하는 신호 2~4개, 쉼표로)`;
+}
+function copyAsk(){ copy(askText(cur), "질문 글을 복사했어요 — AI 창에 붙여 넣고 보내요"); }
+function openAi(n){ D.settings.ai = n; save(); window.open(AI_URL[n], "_blank"); drawPred(); }
+// AI 답 읽기 — 9줄 꼴(줄 이름이 조금 달라도 · 굵게 표시 · 번호 · 점 무시) · JSON 이면 그대로
+function parseAnswer(t){
+  t = String(t||"").replace(/\r/g,"").replace(/\*\*|__|`/g,"");
+  const jm = t.match(/\{[\s\S]*\}/);
+  if(jm){ try{ const j = JSON.parse(jm[0]); if(j.color||j.diag) return {diag:String(j.diag||"—"), color:String(j.color||""), why:String(j.why||"—"), timeline:Object.assign({today:"—",d3:"—",w1:"—",w2:"—"}, j.timeline||{}), care:[].concat(j.care||[]).map(String), red:[].concat(j.red||[]).map(String)}; }catch(e){} }
+  const pick = re => { const m = t.match(new RegExp("^[ \\t\\-•*·\\d.)]*(?:"+re+")\\s*[:：]\\s*(.+)$", "m")); return m ? m[1].trim().replace(/^[(（](.*)[)）]$/,"$1").trim() : ""; };
+  const list = x => x.split(/[,，·、;]|\s\/\s/).map(v=>v.trim().replace(/^[-•*\d.)\s]+/,"")).filter(Boolean);
+  const colorLine = pick("긴급도|긴급|신호등|색깔|색"); let cm = colorLine.match(/초록|노랑|빨강/);
+  if(!cm) cm = t.replace(/^.*빨강 신호.*$/mg,"").match(/초록|노랑|빨강/);
+  return {diag: pick("예상되는 상태|예상 상태|예상|진단|상태")||"—", color: cm ? cm[0] : "", why: pick("까닭|이유|근거")||"—",
+    timeline:{today:pick("오늘")||"—", d3:pick("3일 뒤|3일뒤|3일 후|3일")||"—", w1:pick("1주 뒤|1주뒤|1주 후|일주일 뒤|일주일|1주")||"—", w2:pick("2주 뒤|2주뒤|2주 후|2주")||"—"},
+    care:list(pick("할 것|할것|대처|지금 할 수 있는 것|지금 할 것|돌봄")), red:list(pick("빨강 신호|빨강신호|위험 신호|병원 신호|빨강"))};
+}
+function readAnswer(forceColor){
+  const t = ($("ansIn") ? $("ansIn").value : askDraft).trim(); askDraft = t;
+  if(!t) return toast("AI 답을 먼저 붙여 넣어요");
+  const j = parseAnswer(t); if(forceColor) j.color = forceColor;
+  if(!COLORS.includes(j.color)){ needColor = true; drawPred(); return toast("긴급도 색을 못 찾았어요 — 아래에서 골라요"); }
+  needColor = false; applyAnswer(j, D.settings.ai, t); toast(D.settings.ai + " 답을 쌍둥이에 넣었어요");
+}
+function applyAnswer(j, who, raw){
+  sfx(j.color === "빨강" ? "bad" : "chime"); speak(`${j.diag || ""}. ${j.why || ""}`);
+  j.model = who; j.at = new Date().toISOString(); if(raw) j.raw = raw; cur.ai = j; tl = "d3";
+  const k = {"GPT":"gpt", "제미나이":"gemini", "클로드":"claude"}[String(who).replace(/ \(열쇠\)$/,"")];
+  if(k) cur.three[k] = {color:j.color, diag:j.diag};   // 세 AI 칸에도 같이 (사람이 적은 칸은 안 덮음 — 새 답일 때만)
+  drawPred();
+}
+function useTest(){ applyAnswer(testPredict(cur), "시험 답"); }
+async function directAsk(){
+  $("predSide").innerHTML = `<h2>앞날 예측</h2><div class="hint"><span class="busy"></span>클로드에게 묻는 중…</div>`;
+  try{
+    const j = await callClaude(`학생 상황 :\n${caseText(cur)}\n\n예상되는 상태 이름 하나, 긴급도(초록/노랑/빨강 중 하나 · 애매하면 안전한 쪽), 그렇게 본 까닭 한 문장, 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 몸이 어떻게 될지 각 한 문장, 지금 할 수 있는 것 3~4개, 빨강으로 바뀌는 신호 2~4개를 내라. 꼴 : {"diag":"…","color":"노랑","why":"…","timeline":{"today":"…","d3":"…","w1":"…","w2":"…"},"care":["…"],"red":["…"]}`);
+    if(!COLORS.includes(j.color)) j.color = "빨강"; applyAnswer(j, "클로드 (열쇠)");
+  }catch(e){ toast(e.message); drawPred(); }
+}
+
+/* ===== [5] JS AI ===== */
+const SYS = `너는 고등학교 보건실의 가상 보건 선생님이다. 학생이 다치거나 아픈 상황을 말하면 고등학생이 알아듣는 짧고 다정한 한국어로 답한다.
+규칙 : ① 너의 답은 의사 진단이 아니다 — 늘 «병원에서 확인» 쪽으로 ② 긴급도는 초록(집에서 돌봄) · 노랑(며칠 안에 병원) · 빨강(지금 바로 병원)뿐이며 애매하면 더 안전한 색(노랑 → 빨강)으로 ③ 머리 · 목 · 척추 · 숨 · 의식 · 심한 피 · 모양이 달라짐 · 뼈 통증 · 감각 없음은 빨강 ④ 약 이름 · 약 먹으라는 말은 하지 않는다 ⑤ JSON 만 낸다 (설명 글 · 코드 울타리 없이).`;
+function caseText(c){
+  const sp = (c.spots && c.spots.length) ? c.spots : [{part:(partsOf(c)[0]||""), how:c.how, since:c.since}];
+  const lines = sp.map((x,i)=>`- ${x.part||"몸 안 (부위 없음)"}${i===0&&sp.length>1?" (주된 곳)":""} : ${x.how.join(", ")||"무슨 일인지 모름"} / ${x.since.join(", ")||"언제부터 · 상태 모름"}`).join("\n");
+  return `부위 : ${partsOf(c).join(", ")||"(몸 안 · 부위 없음)"}\n부위별로 :\n${lines}\n학생 말 : ${c.text||"(없음)"}` + (c.qa.length?`\n되묻기 답 :\n`+c.qa.map(x=>`- ${x.q} → ${x.a}`).join("\n"):"");
+}
+async function callClaude(user){
+  const r = await fetch("https://api.anthropic.com/v1/messages", {method:"POST", headers:{"content-type":"application/json","x-api-key":D.settings.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body: JSON.stringify({model:D.settings.model, max_tokens:900, system:SYS, messages:[{role:"user", content:user}]})});
+  if(!r.ok){ const t = await r.text(); throw new Error(r.status===401?"열쇠가 틀려요 (401)":r.status===429?"너무 자주 물었어요 — 잠깐 뒤에":"AI 가 답하지 않아요 ("+r.status+")"); }
+  const j = await r.json(); const txt = (j.content||[]).map(x=>x.text||"").join("");
+  const m = txt.match(/\{[\s\S]*\}/); if(!m) throw new Error("AI 답을 못 읽었어요"); return JSON.parse(m[0]);
+}
+async function askTeacher(){   // v0.5 — 되묻기는 앱 규칙(AI 없이) · 생각하는 모습만 잠깐
+  if(!hasSym()) return toast("아픈 곳을 먼저 눌러요");
+  cur.text = $("symText").value.trim(); cur.qa = []; cur.ai = null; cur.id = 0; askDraft = ""; needColor = false;
+  go(3); busy = true; drawTeacher();
+  await new Promise(r=>setTimeout(r, 600));
+  cur.qa = localQuestions(cur).map(x=>({q:x.q, options:x.options.slice(), a:""}));
+  busy = false; drawTeacher(); if(cur.qa.length) speak(cur.qa[0].q);
+}
+function predict(){   // v0.5 — 바로 답을 내지 않고 「AI 에게 묻기」 상자로
+  if(!(cur.qa.length && cur.qa.every(x=>x.a))) return toast("되묻기에 먼저 답해요");
+  go(4);
+}
+function copySym(){ copyAsk(); }
+function copy(t, msg){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>toast(msg)).catch(()=>{ const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast(msg); }); }
+
+/* ===== [6] JS 탐구 벽 ===== */
+function saveCase(){
+  if(!cur.ai) return; cur.id = D.nextId++; cur.made = new Date().toISOString(); cur.ver = VER;
+  D.cases.push(JSON.parse(JSON.stringify(cur))); save(); selCase = cur.id; toast("사례 "+cur.id+"번으로 붙였어요 → 탐구 벽"); drawTop(); drawPred(); confetti(); sfx("chime"); speak("사례 " + cur.id + "번으로 탐구 벽에 붙였어요");
+}
+function confetti(){   // 색종이 30장 — 2초 뒤 지움
+  const cols = ["#2457c5","#1fa796","#ffcf4a","#d93025","#5fb36b","#f9a8d4"];
+  for(let i=0;i<30;i++){ const e = document.createElement("i"); e.className = "confetti"; e.style.left = Math.random()*100+"vw"; e.style.background = cols[i%cols.length]; e.style.animationDelay = (Math.random()*.4)+"s"; document.body.appendChild(e); setTimeout(()=>e.remove(), 2200); }
+}
+function total(c){ const s = c.score; if(s.diag===""||s.urgent===""||s.care==="") return null; return (+s.diag||0)+(+s.urgent||0)+(+s.care||0); }
+function average(){ const t = D.cases.map(total).filter(x=>x!=null); return t.length ? Math.round(t.reduce((a,b)=>a+b,0)/t.length) : null; }
+function drawWall(){
+  $("posters").innerHTML = D.cases.length ? D.cases.map(c=>{ const t = total(c); return `<div class="poster${selCase===c.id?" on":""}" onclick="selCase=${c.id};drawWall()"><span class="tag ${c.ai.color}">${c.ai.color}</span><b>사례 ${c.id} ${esc(partLabel(c))}</b>예측 ${esc(c.ai.diag)}<br>실제 ${esc(c.real.diag||"미확인")}<span class="sc${t!=null&&t<60?" bad":""}">${t==null?"—":t}</span></div>`; }).join("") : `<div class="hint">아직 사례가 없어요 — 앞날 예측에서 「사례로 저장」</div>`;
+  const c = D.cases.find(x=>x.id===selCase);
+  $("caseDetail").innerHTML = !c ? "" : `<div class="cmp">
+    <div class="c ai"><h4>쌍둥이 예측 (${esc(c.ai.model)}) · 사례 ${c.id}</h4><p><b>진단</b>${esc(c.ai.diag)}</p><p><b>긴급</b>${c.ai.color}</p><p><b>1주 뒤</b>${esc(c.ai.timeline.w1)}</p><p><b>대처</b>${esc((c.ai.care||[]).join(" · "))}</p><p><b>답한 것</b>${esc(c.ai.model)}</p></div>
+    <div class="c real"><h4>실제 · 사례 ${c.id} <span class="hint">사람이 적음</span></h4>
+      <input type="text" placeholder="실제 진단 (예 : 인대 늘어남)" value="${esc(c.real.diag)}" oninput="setReal(${c.id},'diag',this.value)">
+      <input type="text" placeholder="병원 간 때 (예 : 2일 뒤)" value="${esc(c.real.hospital)}" oninput="setReal(${c.id},'hospital',this.value)">
+      <input type="text" placeholder="치료 (예 : 보조기 2주)" value="${esc(c.real.treat)}" oninput="setReal(${c.id},'treat',this.value)">
+      <input type="text" placeholder="나은 때 (예 : 약 3주)" value="${esc(c.real.healed)}" oninput="setReal(${c.id},'healed',this.value)"></div></div>
+    <div class="card" style="margin-top:10px"><h3>세 AI 갈림 <span class="hint">같은 질문 글을 다른 AI 에도 물어 색 · 예상을 적음</span></h3>
+      ${[["gpt","GPT"],["gemini","제미나이"],["claude","클로드"]].map(([k,n],i)=>`<div class="row"${i?' style="margin-top:4px"':""}><span style="width:70px">${n}</span>${selColor(c.id,k,c.three[k].color)}<input type="text" style="flex:1;min-width:120px" placeholder="${n} 예상" value="${esc(c.three[k].diag)}" oninput="setThree(${c.id},'${k}','diag',this.value)">${String(c.ai.model).startsWith(n)?'<span class="tag '+c.ai.color+'">선생님 답</span>':""}</div>`).join("")}</div>
+    <div class="card" style="margin-top:10px"><h3>점수 <span class="hint">사람이 매김 · 셋 다 적어야 총점</span></h3>
+      <div class="scores"><div><label>진단 (0~40)</label><input type="number" min="0" max="40" value="${c.score.diag}" onchange="setScore(${c.id},'diag',this.value,40)"></div><div><label>긴급도 (0~40)</label><input type="number" min="0" max="40" value="${c.score.urgent}" onchange="setScore(${c.id},'urgent',this.value,40)"></div><div><label>대처 (0~20)</label><input type="number" min="0" max="20" value="${c.score.care}" onchange="setScore(${c.id},'care',this.value,20)"></div></div>
+      <div class="row" style="margin-top:8px"><span class="hint">틀린 이유</span><select style="max-width:200px" onchange="setField(${c.id},'wrong',this.value)">${WRONG.map(w=>`<option${c.wrong===w?" selected":""}>${w}</option>`).join("")}</select><span class="hint">총점 <b>${total(c)==null?"—":total(c)}</b></span></div>
+      <input type="text" placeholder="메모 한 줄" value="${esc(c.memo)}" oninput="setField(${c.id},'memo',this.value)" style="margin-top:6px">
+      <div class="row" style="margin-top:6px"><button class="b dim sm" onclick="delCase(${c.id})">이 사례 지움</button><span class="hint">번호는 다시 안 써요</span></div></div>`;
+  // 성적표
+  const rows = D.cases.map(c=>`<tr><td>${c.id} ${esc(partLabel(c))}</td><td>${c.ai.color}</td><td>${esc(c.real.diag||"미확인")}</td><td class="n">${c.score.diag===""?"—":c.score.diag}</td><td class="n">${c.score.urgent===""?"—":c.score.urgent}</td><td class="n">${c.score.care===""?"—":c.score.care}</td><td class="n"><b${total(c)!=null&&total(c)<60?' style="color:#d93025"':""}>${total(c)==null?"—":total(c)}</b></td><td>${c.wrong==="(없음)"?"—":`<span class="tag y">${c.wrong}</span>`}</td></tr>`).join("");
+  const scored = D.cases.filter(c=>total(c)!=null);
+  const avgOf = k => scored.length ? Math.round(scored.reduce((a,c)=>a+(+c.score[k]||0),0)/scored.length) : "—";
+  const redOk = D.cases.filter(c=>c.real.diag && c.ai.color==="빨강").length;
+  const missed = D.cases.filter(c=>c.ai.color==="초록" && (c.wrong==="가볍게 봄")).length;
+  const same = D.cases.filter(c=>threeCols(c).length>=2 && new Set(threeCols(c)).size===1).length;   // 둘 이상 적혔고 다 같은 색
+  const diff = D.cases.filter(c=>new Set(threeCols(c)).size===3).length;
+  $("report").innerHTML = `<table class="rep"><tr><th>사례</th><th>AI 색</th><th>실제</th><th class="n">진단 40</th><th class="n">긴급 40</th><th class="n">대처 20</th><th class="n">총점</th><th>틀린 이유</th></tr>${rows}
+    <tr style="background:#f6f8fb"><td><b>평균 (${scored.length}건)</b></td><td></td><td></td><td class="n">${avgOf("diag")}</td><td class="n">${avgOf("urgent")}</td><td class="n">${avgOf("care")}</td><td class="n"><b>${average()==null?"—":average()}</b></td><td></td></tr></table>
+    <div class="card" style="margin-top:10px"><h3>🚦 긴급도는 맞았나 <span class="hint">진단명보다 중요 (계획서 3-2)</span></h3><div class="kv"><span>AI 가 빨강이라 한 사례 (실제 적힌 것)</span><b>${redOk}건</b></div><div class="kv"><span>가볍게 봄 (병원 가야 할 걸 초록)</span><b style="color:#d93025">${missed}건</b></div></div>
+    <div class="card" style="margin-top:10px"><h3>👥 세 AI 비교 <span class="hint">GPT · 제미나이 · 클로드 칸 (둘 이상 적힌 사례)</span></h3><div class="kv"><span>다 같은 색</span><b>${same}건</b></div><div class="kv"><span>셋이 다 다름</span><b>${diff}건</b></div></div>`;
+  $("sig").textContent = `메타버스 보건실 ${VER} · 동아리 탐구용 · DSM 57 · 자료는 이 기기 안에만`;
+}
+function threeCols(c){ return ["gpt","gemini","claude"].map(k=>c.three[k]&&c.three[k].color).filter(Boolean); }
+function selColor(id, who, v){ return `<select style="max-width:110px" onchange="setThree(${id},'${who}','color',this.value)"><option value="">색</option>${COLORS.map(c=>`<option${v===c?" selected":""}>${c}</option>`).join("")}</select>`; }
+function cs(id){ return D.cases.find(x=>x.id===id); }
+function setReal(id,k,v){ cs(id).real[k] = v; save(); drawTop(); }
+function setThree(id,who,k,v){ cs(id).three[who][k] = v; save(); }
+function setScore(id,k,v,max){ const c = cs(id); if(v===""){ c.score[k] = ""; } else { c.score[k] = Math.max(0, Math.min(max, Math.round(+v)||0)); } save(); drawTop(); $("report").innerHTML && drawWallReport(); }
+function drawWallReport(){ const keep = document.activeElement; const sc = $("posters").parentElement.scrollTop; drawWall(); $("posters").parentElement.scrollTop = sc; if(keep && keep.id) $(keep.id)?.focus(); }
+function setField(id,k,v){ cs(id)[k] = v; save(); if(k==="wrong") drawWallReport(); }
+function delCase(id){ if(!confirm("사례 "+id+"번을 지울까요? 번호는 다시 쓰지 않아요")) return; D.cases = D.cases.filter(c=>c.id!==id); selCase = null; save(); drawTop(); drawWall(); }
+function copyTable(){
+  const h = ["사례","부위","답한 AI","AI 색","AI 예상","실제 진단","GPT 색","제미나이 색","클로드 색","진단 40","긴급 40","대처 20","총점","틀린 이유","메모"];
+  const rows = D.cases.map(c=>[c.id,partLabel(c),c.ai.model,c.ai.color,c.ai.diag,c.real.diag,c.three.gpt.color,c.three.gemini.color,c.three.claude.color,c.score.diag,c.score.urgent,c.score.care,total(c)??"",c.wrong==="(없음)"?"":c.wrong,c.memo].map(x=>String(x??"").replace(/\t|\n/g," ")).join("\t"));
+  copy([h.join("\t"), ...rows, ["평균","","","","","","","","","","","",average()??"","",""].join("\t")].join("\n"), "표를 복사했어요 — 한글 · 엑셀에 붙여 넣어요");
+}
+function exportJson(){ const d = {app:"메타버스 보건실", ver:VER, at:new Date().toISOString(), nick:D.settings.nick, nextId:D.nextId, cases:D.cases}; const b = new Blob([JSON.stringify(d,null,1)],{type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "보건실_사례_"+new Date().toISOString().slice(0,10)+".json"; a.click(); toast("파일로 저장했어요 (열쇠는 안 들어가요)"); }
+function importJson(inp){ const f = inp.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try{ const d = JSON.parse(r.result); if(!Array.isArray(d.cases)) throw 0; let n = 0; d.cases.forEach(c=>{ if(!D.cases.some(x=>x.id===c.id)){ D.cases.push(c); n++; } }); D.nextId = Math.max(D.nextId, ...D.cases.map(c=>c.id+1)); save(); drawTop(); toast(n+"건 불러왔어요 (같은 번호는 건너뜀)"); }catch(e){ toast("파일을 못 읽었어요"); } inp.value = ""; }; r.readAsText(f); }
+function eraseAll(){ if(!confirm("사례를 모두 지울까요? 번호는 이어서 붙어요")) return; D.cases = []; save(); drawTop(); toast("모두 지웠어요"); }
+
+/* 설정 */
+function openSet(){ $("keyIn").value = ""; $("keyState").textContent = D.settings.key ? "열쇠 있음 (…"+D.settings.key.slice(-4)+") · 이 기기에만" : "열쇠 없음 — 질문 글 복사 · 답 붙여넣기로 돌아요 (이게 기본)"; $("modelIn").value = D.settings.model; $("testIn").checked = D.settings.test;
+  $("verLine").innerHTML = `${VER} · 만든 날 ${MADE} · 고친 날 ${FIXED} · 57번 폴더 · index.html<table>${CHANGES.map(c=>`<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join("")}</table>`; $("setModal").classList.add("on"); }
+function saveKey(){ const k = $("keyIn").value.trim(); if(!k) return toast("열쇠를 넣어요"); D.settings.key = k; save(); openSet(); drawTop(); toast("열쇠를 이 기기에 저장했어요"); }
+function clearKey(){ D.settings.key = ""; save(); openSet(); drawTop(); toast("열쇠를 지웠어요"); }
+$("modelIn").onchange = e => { D.settings.model = e.target.value; save(); };
+$("testIn").onchange = e => { D.settings.test = e.target.checked; save(); drawTop(); };
+$("nickIn").oninput = e => { D.settings.nick = e.target.value.trim() || "쩐찌"; save(); $("nick").textContent = D.settings.nick; };
+$("symText").oninput = e => { cur.text = e.target.value; };
+
+/* 시작 — #m=열쇠 (QR) 는 저장하고 주소에서 지움 */
+(function(){
+  const m = location.hash.match(/#m=([^&]+)/); if(m){ D.settings.key = decodeURIComponent(m[1]); save(); history.replaceState(null,"",location.pathname+location.search); toast("QR 열쇠를 이 기기에 저장했어요"); }
+  if("serviceWorker" in navigator){ if(location.protocol==="https:") navigator.serviceWorker.register("sw.js").catch(()=>{}); else navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>r.unregister())).catch(()=>{}); }
+  drawTop(); go(1);
+})();
+</script>
+</body>
+</html>

@@ -207,7 +207,7 @@ svg .anim-teacher{transform-box:fill-box;transform-origin:50% 90%;animation:nod 
 svg .anim-teacher.busy{animation:nod 1.1s ease-in-out infinite}
 svg .anim-me{transform-box:fill-box;transform-origin:50% 100%;animation:walkin 1.2s ease-out both}
 svg .anim-me.idle{animation:bob 3s ease-in-out infinite}
-svg .anim-twin{transform-box:fill-box;transform-origin:center;animation:breathe 2.6s ease-in-out infinite;cursor:pointer}
+svg .anim-twin{transform-box:view-box;animation:breathe 2.6s ease-in-out infinite;cursor:pointer}
 svg .anim-plant{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.5s ease-in-out infinite}
 svg .anim-sun{transform-box:fill-box;transform-origin:center;animation:glow 4s ease-in-out infinite}
 .part.on{animation:hurt 1.2s ease-in-out infinite}
@@ -234,6 +234,14 @@ svg .anim-me.flinch{animation:flinch .5s ease-out 2}
 svg .anim-me.shiver{animation:shiver .14s linear 14}
 svg .anim-me.happy{animation:bounce .45s ease-out 3}
 svg .anim-me.wince{animation:nod 1s ease-in-out 2}
+/* v0.6s 애니메이션 — 걸을 때 발걸음(속 몸통 g.body) · 눈 깜빡임(g.eyes) · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통 */
+@keyframes eyeblink{0%,90%,100%{transform:scaleY(1)}95%{transform:scaleY(.08)}}
+svg .eyes{transform-box:fill-box;transform-origin:center;animation:eyeblink 4.6s ease-in-out infinite}
+svg .goto > .body, svg .tgoto > .body, svg .anim-me:not(.idle):not(.goto):not(.flinch):not(.shiver):not(.happy):not(.wince) > .body{transform-box:fill-box;transform-origin:50% 100%;animation:step .3s ease-in-out infinite}
+svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
+@keyframes unlock{0%,100%{transform:translateY(0)}30%{transform:translateY(-7px)}60%{transform:translateY(0)}80%{transform:translateY(-3px)}}
+.nav button.fresh{animation:unlock .7s ease-out 3}
+.nav button.fresh i{animation:unlock .7s ease-out 3}
 .nav button.on i{display:inline-block;animation:bounce .5s ease-out}
 .nav button.lock{opacity:.42}.nav button.lock:after{content:" 🔒";font-size:11px}
 .poster{animation:pop .4s ease-out both}
@@ -401,8 +409,8 @@ svg .anim-me.wince{animation:nod 1s ease-in-out 2}
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-22 00:15";
-const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-22 01:10";
+const CHANGES = [["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
 const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
@@ -606,7 +614,7 @@ function showGuide(i){ guideI = i; const g = GUIDE[i], last = i === GUIDE.length
 function endGuide(){ $("guide").classList.remove("on"); if(!D.settings.guideDone){ D.settings.guideDone = true; save(); } sfx("chime"); }
 function stepOk(n){ return n <= 2 || n === 5 || (n === 3 && hasSym()) || (n === 4 && (cur.ai || (cur.qa.length && cur.qa.every(x=>x.a)))); }
 function stepWhy(n){ return n === 3 ? "먼저 ② 디지털 트윈에서 아픈 곳을 누르고 ✔ 저장해요" : "먼저 ③ 선생님 되묻기에 답해요"; }
-function drawNav(){ document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("lock", !stepOk(+b.dataset.p))); }
+function drawNav(){ document.querySelectorAll(".nav button").forEach(b=>{ const was = b.classList.contains("lock"), lock = !stepOk(+b.dataset.p); b.classList.toggle("lock", lock); if(was && !lock){ b.classList.add("fresh"); setTimeout(() => b.classList.remove("fresh"), 2300); } }); }
 function go(n){
   if(!stepOk(n)){ sfx("bad"); toast(stepWhy(n)); return; }
   page = n; if(n!==1) rst = 0; drawNav(); document.querySelectorAll(".page").forEach(p=>p.classList.toggle("on", p.id==="p"+n));
@@ -672,7 +680,7 @@ function faceSvg(S, girl, ears, iris){
     ? `<ellipse cx="-12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><ellipse cx="12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><circle cx="-12" cy="9" r="4.2" fill="${iris}"/><circle cx="12" cy="9" r="4.2" fill="${iris}"/><circle cx="-12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="-13.5" cy="6" r="1.7" fill="#fff"/><circle cx="10.5" cy="6" r="1.7" fill="#fff"/><path d="M-19 -1 q7 -4 13 -1 M6 -2 q6 -3 13 1" stroke="${LINE}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-18.5 3 l-2.5 -2 M-14 1.2 l-1 -2.6 M18.5 3 l2.5 -2 M14 1.2 l1 -2.6" stroke="${LINE}" stroke-width="1.4" stroke-linecap="round"/>`
     : `<ellipse cx="-12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><ellipse cx="12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><circle cx="-12" cy="9" r="2" fill="#1a1a1a"/><circle cx="12" cy="9" r="2" fill="#1a1a1a"/><circle cx="-13" cy="6.5" r="1.3" fill="#fff"/><circle cx="11" cy="6.5" r="1.3" fill="#fff"/><path d="M-19 -2 q7 -4 13 -1 M6 -3 q6 -3 13 1" stroke="${LINE}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
   return (ears ? `<circle cx="-33" cy="8" r="6" fill="${S}" ${OUT}/><circle cx="33" cy="8" r="6" fill="${S}" ${OUT}/>` : "")
-    + `<ellipse cx="0" cy="2" rx="34" ry="33" fill="${S}" ${OUT}/><ellipse cx="-21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><ellipse cx="21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/>${eyes}<path d="M-6 19 Q0 27 6 19 Z" fill="#fff" stroke="#b05050" stroke-width="1.8" stroke-linejoin="round"/>`;
+    + `<ellipse cx="0" cy="2" rx="34" ry="33" fill="${S}" ${OUT}/><ellipse cx="-21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><ellipse cx="21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><g class="eyes" style="animation-delay:${(-Math.random()*4).toFixed(1)}s">${eyes}</g><path d="M-6 19 Q0 27 6 19 Z" fill="#fff" stroke="#b05050" stroke-width="1.8" stroke-linejoin="round"/>`;
 }
 // 머리 모양 아홉 — 뒤판 · 앞머리 · 귀 보임 (v0.6)
 const HAIRS = [["long","긴 머리"],["bob","단발"],["tied","묶음"],["twin","양갈래"],["pony","포니"],["curly","곱슬"],["short","짧은"],["spiky","뾰족"],["mush","바가지"]];
@@ -730,20 +738,20 @@ function outfitSvg(a, S){
 }
 function meSvg(x, y, cls){
   const a = D.settings.av, H = a.hairc, S = a.skin, girl = a.sex === "girl", hr = hairSvg(a, H);
-  return `<g transform="translate(${x},${y})"><g class="${cls}">${hr.back}${outfitSvg(a, S)}${faceSvg(S, girl, hr.ears, a.eyec || "#3b7dd8")}${hr.front}${accSvg(a)}</g></g>`;
+  return `<g transform="translate(${x},${y})"><g class="${cls}"><g class="body">${hr.back}${outfitSvg(a, S)}${faceSvg(S, girl, hr.ears, a.eyec || "#3b7dd8")}${hr.front}${accSvg(a)}</g></g></g>`;
 }
 // 보건 선생님 — 같은 그림체 · 쪽머리 · 흰 가운 + 하늘색 윗옷 + 빨간 십자 · exam 이면 청진기 · 발끝 y≈150
 function teacherSvg(x, y, cls, exam){
   const S = "#ffd9b8", H = "#5a3a2a";
   const st = exam ? `<path d="M-14 36 Q-24 66 -8 86" stroke="#2f3a4a" stroke-width="3" fill="none"/><path d="M14 36 Q24 60 10 76" stroke="#2f3a4a" stroke-width="3" fill="none"/><circle cx="-8" cy="90" r="7" fill="#2f3a4a" ${OUT}/>` : "";
-  return `<g transform="translate(${x},${y})"><g class="${cls}" style="cursor:pointer" onclick="go(3)">
+  return `<g transform="translate(${x},${y})"><g class="${cls}" style="cursor:pointer" onclick="go(3)"><g class="body">
 <circle cx="0" cy="-34" r="12" fill="${H}" ${OUT}/><path d="M-35 -4 Q-35 -42 0 -42 Q35 -42 35 -4 L35 12 Q30 22 25 12 L-25 12 Q-30 22 -35 12 Z" fill="${H}" ${OUT}/>
 <rect x="-7" y="28" width="14" height="12" fill="${S}"/><path d="M-20 32 L0 60 L20 32 Z" fill="#bfe0f5" ${OUT}/>
 <path d="M-34 36 L-18 32 L-2 62 L-2 112 L-36 112 Z" fill="#fff" ${OUT}/><path d="M34 36 L18 32 L2 62 L2 112 L36 112 Z" fill="#fff" ${OUT}/><circle cx="5" cy="74" r="2" fill="#9fb3c8"/><circle cx="5" cy="88" r="2" fill="#9fb3c8"/><circle cx="5" cy="100" r="2" fill="#9fb3c8"/>
 <rect x="-24" y="70" width="12" height="4" fill="#d93025"/><rect x="-20" y="66" width="4" height="12" fill="#d93025"/>
 <rect x="-49" y="36" width="16" height="62" rx="8" fill="#fff" ${OUT}/><rect x="33" y="36" width="16" height="62" rx="8" fill="#fff" ${OUT}/><circle cx="-41" cy="104" r="6.5" fill="${S}" ${OUT}/><circle cx="41" cy="104" r="6.5" fill="${S}" ${OUT}/>
 <path d="M-33 112 L33 112 L36 132 L-36 132 Z" fill="#3b4a6b" ${OUT}/><rect x="-18" y="130" width="13" height="12" fill="${S}"/><rect x="5" y="130" width="13" height="12" fill="${S}"/><rect x="-22" y="141" width="19" height="8" rx="3.5" fill="#3a2a22" ${OUT}/><rect x="3" y="141" width="19" height="8" rx="3.5" fill="#3a2a22" ${OUT}/>
-${st}${faceSvg(S, true, true, "#6b4a2e")}<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q28 -24 4 -22 Q0 -14 -4 -22 Q-28 -24 -34 2 Z" fill="${H}" ${OUT}/></g></g>`;
+${st}${faceSvg(S, true, true, "#6b4a2e")}<path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q28 -24 4 -22 Q0 -14 -4 -22 Q-28 -24 -34 2 Z" fill="${H}" ${OUT}/></g></g></g>`;
 }
 // 디지털 트윈(디지털 트윈) — 같은 얼굴 비율의 청록 선 그림 · 조각은 부위마다(앞 · 뒤) · 얼굴 · 머리카락은 눌리지 않는 덧그림
 const TWIN_F = [
@@ -832,7 +840,7 @@ function drawRoom(){
     <g style="cursor:pointer" onclick="rest()"><rect x="380" y="470" width="230" height="80" rx="10" fill="#fff" stroke="#9fb3c8" stroke-width="3"/><rect x="380" y="452" width="70" height="36" rx="10" fill="#e9eef5" stroke="#9fb3c8" stroke-width="3"/><rect x="388" y="556" width="14" height="50" fill="#9fb3c8"/><rect x="588" y="556" width="14" height="50" fill="#9fb3c8"/></g>
     ${front ? teacher : ""}
     ${DESK}
-    <g class="anim-twin" onclick="go(2)"><rect x="460" y="120" width="150" height="230" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(422,122) scale(.355)">${twinOutline(hasSym()?"hurt":"fine")}</g></g>
+    <g class="anim-twin" style="transform-origin:535px 235px" onclick="go(2)"><rect x="460" y="120" width="150" height="230" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(422,122) scale(.355)">${twinOutline(hasSym()?"hurt":"fine")}</g></g>
     ${me}${props}
     <rect x="590" y="380" width="36" height="44" rx="4" fill="#c9a37a"/><ellipse class="anim-plant" cx="608" cy="372" rx="28" ry="18" fill="#5fb36b"/></svg>
     ${rst>=2 && T ? '' : `<div class="lbl" style="left:${X(25)};top:${Y(48)}">보건 선생님 (AI)</div>`}<div class="lbl tw" style="left:${X(66)};top:${Y(12)}">내 디지털 트윈</div>${rst===0?`<div class="lbl me" style="left:${X(9)};top:${Y(88)}">나 · ${esc(D.settings.nick)}</div>`:""}
@@ -947,8 +955,8 @@ function drawTeacher(){
   const say = busy ? "음… 몇 가지만 더 물어볼게요" : !hasSym() ? "먼저 디지털 트윈에서 아픈 곳을 눌러요" : open ? esc(open.q) : done ? "고마워요 — 이제 AI 에게 물어봐요. 답을 가져오면 디지털 트윈이 앞날을 보여 줄게요" : esc(partLabel(cur)) + " 이야기를 들려줘요";
   $("teacherScene").innerHTML = `<svg viewBox="0 0 640 666" preserveAspectRatio="xMidYMax slice">
     <rect width="640" height="430" fill="#dff0ff"/><rect y="430" width="640" height="236" fill="#f3e6d2"/><rect y="424" width="640" height="10" fill="#c9a37a"/>
-    <g class="anim-twin" style="cursor:pointer" onclick="go(2)"><rect x="470" y="86" width="140" height="215" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(434,88) scale(.33)">${twinOutline(hasSym() ? "hurt" : "fine")}</g></g>
-    ${teacherSvg(225, 372, "anim-teacher" + (busy ? " busy" : ""))}${DESK}
+    <g class="anim-twin" style="cursor:pointer;transform-origin:540px 193px" onclick="go(2)"><rect x="470" y="86" width="140" height="215" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(434,88) scale(.33)">${twinOutline(hasSym() ? "hurt" : "fine")}</g></g>
+    ${teacherSvg(225, 372, "anim-teacher" + (busy ? " busy" : open || done ? " talk" : ""))}${DESK}
     ${meSvg(470, 500, "anim-me idle")}</svg>
     <div class="lbl" style="left:25%;top:48%">보건 선생님 (AI)</div><div class="lbl tw" style="left:74%;top:9%">내 디지털 트윈</div><div class="lbl me" style="left:68%;top:88%">나 · ${esc(D.settings.nick)}</div>
     <div class="bubble" style="left:3%;top:${open || done ? "20%" : "30%"}">${say}</div>
@@ -974,6 +982,8 @@ function answer(i, o){ cur.qa[i].a = o; sfx("pop");
 function predKind(c){ const a = c.ai || {}; const p = c.part || "", how = c.how.join(" "); return {sick: a.kind ? !/head|cut|burn|bug|blister|cramp|sprain|bruise/.test(a.kind) : !c.how.some(h=>HOW.includes(h)) || /코피/.test(how), leg: /허벅지|무릎|종아리|정강이|발/.test(p), hand: /손|팔/.test(p), head: /머리|얼굴|뒤통수/.test(p), fever: /열|감기|목 아픔|두통/.test(how) || c.since.includes("열 남")}; }
 // 단계 배경 — 오늘 보건실 · 3일 뒤 집 · 1주 뒤 교실 · 2주 뒤 운동장 (v0.6l · 전무님 «앞날 예측이 너무 단조로워»)
 const PRED_BG = {
+  m1: () => `<rect width="640" height="440" fill="#e3f2ff"/><rect y="440" width="640" height="180" fill="#cfe9b8"/><circle cx="80" cy="70" r="30" fill="#ffcf4a"/><rect x="420" y="200" width="200" height="240" fill="#fff" stroke="#9fb3c8" stroke-width="3"/><rect x="500" y="230" width="40" height="40" fill="#d93025"/><rect x="516" y="222" width="8" height="56" fill="#fff"/><rect x="492" y="246" width="56" height="8" fill="#fff"/><path d="M0 440 Q160 400 320 440 T640 440" fill="none" stroke="#8fcf8f" stroke-width="6"/>`,
+  m3: () => `<rect width="640" height="440" fill="#ffe9c9"/><rect y="440" width="640" height="180" fill="#bfe3a6"/><circle cx="560" cy="90" r="36" fill="#ff9f43"/><path d="M0 460 h640" stroke="#fff" stroke-width="4" stroke-dasharray="20 14"/><path d="M60 300 l0 -120 l90 30 l-90 30" fill="#d93025" stroke="#2f3a4a" stroke-width="3"/><path d="M520 300 l0 -120 l90 30 l-90 30" fill="#2457c5" stroke="#2f3a4a" stroke-width="3"/>`,
   today: () => `<rect width="640" height="440" fill="#eaf4fb"/><rect y="440" width="640" height="180" fill="#f3e6d2"/><rect x="24" y="24" width="90" height="70" rx="6" fill="#fff8d8" stroke="#fff" stroke-width="6"/><line x1="69" y1="24" x2="69" y2="94" stroke="#fff" stroke-width="4"/><rect x="540" y="30" width="76" height="20" rx="4" fill="#2457c5"/><text x="578" y="45" text-anchor="middle" font-size="12" fill="#fff" font-family="Jua">보 건 실</text><rect x="520" y="470" width="110" height="36" rx="8" fill="#fff" stroke="#9fb3c8" stroke-width="3"/>`,
   d3:    () => `<rect width="640" height="440" fill="#fff4e6"/><rect y="440" width="640" height="180" fill="#e9d8c0"/><path d="M60 20 a22 22 0 1 0 22 30 a16 16 0 1 1 -22 -30z" fill="#ffcf4a"/><rect x="24" y="110" width="40" height="60" rx="4" fill="#9fb3c8"/><rect x="18" y="104" width="52" height="8" rx="3" fill="#8295a8"/><rect x="556" y="396" width="60" height="44" rx="8" fill="#f9a8d4" opacity=".7"/><rect x="548" y="430" width="76" height="14" rx="5" fill="#d98cb5" opacity=".7"/>`,
   w1:    () => `<rect width="640" height="440" fill="#f1f7ee"/><rect y="440" width="640" height="180" fill="#dcd3c3"/><rect x="20" y="20" width="200" height="80" rx="6" fill="#2f5d3a" stroke="#c9a37a" stroke-width="6"/><path d="M40 50 h60 M40 70 h100" stroke="#fff" stroke-width="3" opacity=".8"/><rect x="560" y="420" width="60" height="30" rx="4" fill="#c9a37a"/><rect x="566" y="450" width="6" height="40" fill="#a98357"/><rect x="608" y="450" width="6" height="40" fill="#a98357"/>`,
@@ -1002,25 +1012,27 @@ function drawPred(){
   const hex = {초록:"#1e9e5a",노랑:"#e0a100",빨강:"#d93025"}, K = predKind(cur);
   // pop 움직임(CSS transform)이 같은 g 의 속성 transform 을 덮어 그림이 원래 크기로 커지던 함정(v0.2~0.3) → 겉 g 에 움직임 · 속 g 에 자리
   // 단계마다 아픈 정도 3(많이) → 0(다 나음) : 색에 따라 — 점 크기 · 색 · 표정 · 붕대 · 소품 · 배경 · 말풍선이 달라짐 (v0.6 · v0.6l)
-  const KS = ["today","d3","w1","w2"], LV = ({초록:[2,1,0,0], 노랑:[3,2,1,0], 빨강:[3,3,2,1]})[a.color] || [2,1,0,0], lv = k => LV[KS.indexOf(k)];
+  const KS = ["today","d3","w1","w2","m1","m3"], LV = ({초록:[2,1,0,0,0,0], 노랑:[3,2,1,0,0,0], 빨강:[3,3,2,1,1,0]})[a.color] || [2,1,0,0,0,0], lv = k => LV[KS.indexOf(k)];
+  const DEF = {m1: {초록:"다 나았어요 — 평소처럼 지내요", 노랑:"거의 다 나았어요 — 무리하면 다시 아플 수 있어요", 빨강:"병원 치료가 끝나 가요 — 검진 한 번 더"}, m3: {초록:"다 나았어요", 노랑:"다 나았어요 — 같은 일이 또 생기면 병원", 빨강:"다 나았어요 — 다시 아프면 바로 병원"}};
+  const tlText = k => a.timeline[k] || (DEF[k] ? DEF[k][a.color] || DEF[k].노랑 : "—");
   const MOOD = ["fine","better","hurt","bad"], WORD = K.sick ? ["😄 다 나았어요","🙂 거의 괜찮아요","😐 아직 힘들어요","😣 많이 아파요"] : ["😄 다 나았어요","🙂 거의 나았어요","😐 아직 아파요","😣 많이 아파요"];
   const fig = (x,y,s,k,op) => `<g class="${op===1?"predfig":""} stage" data-lv="${lv(k)}" data-k="${k}" opacity="${op}"><g class="in" transform="translate(${x},${y}) scale(${s})${lv(k)===3?" rotate(-4 320 300)":""}">${twinOutline(MOOD[lv(k)])}</g></g>`;
-  const names = {today:"오늘", d3:"3일 뒤", w1:"1주 뒤", w2:"2주 뒤"}, place = {today:"🏥 보건실", d3:"🏠 집", w1:"🏫 교실", w2:"⚽ 운동장"};
-  const line = String(a.timeline[tl] || "—"), l1 = line.length > 16 ? line.slice(0, 16) : line, l2 = line.length > 16 ? line.slice(16, 34) + (line.length > 34 ? "…" : "") : "";
+  const names = {today:"오늘", d3:"3일 뒤", w1:"1주 뒤", w2:"2주 뒤", m1:"1달 뒤", m3:"3달 뒤"}, place = {today:"🏥 보건실", d3:"🏠 집", w1:"🏫 교실", w2:"⚽ 운동장", m1: a.color === "빨강" ? "🏥 병원 검진" : "🚴 밖에서 놀기", m3:"🏃 운동회"};
+  const line = String(tlText(tl)), l1 = line.length > 16 ? line.slice(0, 16) : line, l2 = line.length > 16 ? line.slice(16, 34) + (line.length > 34 ? "…" : "") : "";
   const prev = KS[KS.indexOf(tl) - 1], next = KS[KS.indexOf(tl) + 1];
   S.innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet">${PRED_BG[tl]()}
     ${fig(20,150,.42,prev || "today",.5)}<text x="100" y="130" font-size="18" fill="#5f6b78" font-family="Jua" text-anchor="middle">${prev ? names[prev] : "오늘"}</text><text x="100" y="440" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">${WORD[lv(prev || "today")]}</text>
     ${fig(140,50,.78,tl,1)}<text x="320" y="36" font-size="22" fill="#1f2630" font-family="Jua" text-anchor="middle">${names[tl]} · ${place[tl]}</text>
-    ${fig(470,150,.42,next || "w2",.5)}<text x="545" y="130" font-size="18" fill="#5f6b78" font-family="Jua" text-anchor="middle">${next ? names[next] : "2주 뒤"}</text><text x="545" y="440" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">${WORD[lv(next || "w2")]}</text>
+    ${fig(470,150,.42,next || "m3",.5)}<text x="545" y="130" font-size="18" fill="#5f6b78" font-family="Jua" text-anchor="middle">${next ? names[next] : "3달 뒤"}</text><text x="545" y="440" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">${WORD[lv(next || "m3")]}</text>
     <g class="predfig"><path d="M418 58 h210 a10 10 0 0 1 10 10 v${l2?66:44} a10 10 0 0 1 -10 10 h-180 l-14 14 v-14 h-16 a10 10 0 0 1 -10 -10 v-${l2?66:44} a10 10 0 0 1 10 -10z" fill="#fff" stroke="${hex[a.color]}" stroke-width="3"/><text x="523" y="86" font-size="15" fill="#1f2630" font-family="Jua" text-anchor="middle">${esc(l1)}</text>${l2?`<text x="523" y="108" font-size="15" fill="#1f2630" font-family="Jua" text-anchor="middle">${esc(l2)}</text>`:""}</g>
     <text x="320" y="546" font-size="24" fill="${hex[a.color]}" font-family="Jua" text-anchor="middle">${names[tl]} — ${WORD[lv(tl)]}</text>
     <text x="320" y="572" font-size="15" fill="#5f6b78" font-family="Jua" text-anchor="middle">점 · 붕대 · 표정 · 소품이 단계마다 달라져요 · 오른쪽 시간 줄을 눌러 넘겨요</text>
     <text x="320" y="594" font-size="14" fill="#d93025" font-family="Jua" text-anchor="middle">${esc((a.red||[]).slice(0,2).join(" · "))} → 빨강 · 바로 병원</text></svg>`;
   S.querySelectorAll("g.stage").forEach(g => { painAt(g.querySelector("g.in"), cur.part, +g.dataset.lv); if(g.dataset.k === tl) predProps(g.querySelector("g.in"), cur.part, +g.dataset.lv, K); });
-  const care = a.care || [], tip = {today: care.slice(0,2).join(" · ") || "쉬기", d3: care.slice(2).join(" · ") || care.join(" · ") || "쉬기", w1: K.sick ? "평소대로 · 무리하지 않기" : "가볍게 움직이기 · 무리하지 않기", w2: K.sick ? "평소대로 · 다시 아프면 병원" : "운동은 천천히 · 다시 아프면 병원"}[tl];
+  const care = a.care || [], tip = {today: care.slice(0,2).join(" · ") || "쉬기", d3: care.slice(2).join(" · ") || care.join(" · ") || "쉬기", w1: K.sick ? "평소대로 · 무리하지 않기" : "가볍게 움직이기 · 무리하지 않기", m1: K.sick ? "다 나았어요 · 손 씻기 · 잘 자기 습관" : "다 나았어요 · 다치지 않게 준비 운동", m3: "평소대로 · 건강 기록 남기기", w2: K.sick ? "평소대로 · 다시 아프면 병원" : "운동은 천천히 · 다시 아프면 병원"}[tl];
   P.innerHTML = `<div class="card c-${a.color}"><div class="light"><div class="dots">${COLORS.map(c=>`<i class="${{초록:"g",노랑:"y",빨강:"r"}[c]}${a.color===c?" on":""}"></i>`).join("")}</div><div><b>${a.color} · ${{초록:"집에서 돌봐도 돼요",노랑:"며칠 안에 병원",빨강:"지금 바로 병원 · 어른에게"}[a.color]}</b><div class="hint">${esc(a.diag)} · ${esc(a.why)}</div></div></div></div>
     <div class="card"><div class="time">${KS.map(k=>`<div class="${k===tl?"on":""}${KS.indexOf(k)<KS.indexOf(tl)?" done":""}" onclick="tl='${k}';drawPred()">${names[k]}</div>`).join("")}</div></div>
-    <div class="card"><h3><span class="no">${names[tl]}</span>${place[tl]} · 디지털 트윈은 이렇게</h3><div class="kv"><span>몸</span><b>${esc(a.timeline[tl]||"—")}</b></div><div class="kv"><span>할 것</span><b>${esc(tip)}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
+    <div class="card"><h3><span class="no">${names[tl]}</span>${place[tl]} · 디지털 트윈은 이렇게</h3><div class="kv"><span>몸</span><b>${esc(tlText(tl))}</b></div><div class="kv"><span>할 것</span><b>${esc(tip)}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
     <div class="card"><h3><span class="no">💡</span>지금 할 수 있는 것</h3><div class="hint">${esc(care.join(" · "))}</div><div class="hint" style="color:#8a1f17;margin-top:4px">빨강 신호 : ${esc((a.red||[]).join(" · "))}</div></div>
     <div class="hint">답한 것 : ${esc(a.model)} · ${fmt(a.at)}</div>
     <div class="row" style="margin-top:auto"><button class="big" style="margin:0;flex:1" onclick="saveCase()" ${cur.id?"disabled":""}>${cur.id?"📌 사례 "+cur.id+"번으로 저장됨":"📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🔄 처음부터</button>`:""}</div>`;
@@ -1060,7 +1072,7 @@ ${caseText(c)}
 - 머리 · 목 · 척추 · 숨 · 의식 · 심한 피 · 모양이 달라짐 · 뼈 통증 · 감각 없음은 빨강
 - 약 이름이나 약을 먹으라는 말은 하지 않기
 
-[답 꼴 — 아래 9줄만, 이 순서와 이 이름 그대로, 다른 말 없이]
+[답 꼴 — 아래 11줄만, 이 순서와 이 이름 그대로, 다른 말 없이]
 예상 : (예상되는 상태 이름 하나)
 긴급도 : (초록/노랑/빨강 중 하나)
 까닭 : (그렇게 본 까닭 한 문장)
@@ -1068,6 +1080,8 @@ ${caseText(c)}
 3일 뒤 : (한 문장)
 1주 뒤 : (한 문장)
 2주 뒤 : (한 문장)
+1달 뒤 : (한 문장)
+3달 뒤 : (한 문장)
 할 것 : (지금 할 수 있는 것 3~4개, 쉼표로)
 빨강 신호 : (바로 병원 가야 하는 신호 2~4개, 쉼표로)`;
 }
@@ -1077,13 +1091,13 @@ function openAi(n){ D.settings.ai = n; save(); window.open(AI_URL[n], "_blank");
 function parseAnswer(t){
   t = String(t||"").replace(/\r/g,"").replace(/\*\*|__|`/g,"");
   const jm = t.match(/\{[\s\S]*\}/);
-  if(jm){ try{ const j = JSON.parse(jm[0]); if(j.color||j.diag) return {diag:String(j.diag||"—"), color:String(j.color||""), why:String(j.why||"—"), timeline:Object.assign({today:"—",d3:"—",w1:"—",w2:"—"}, j.timeline||{}), care:[].concat(j.care||[]).map(String), red:[].concat(j.red||[]).map(String)}; }catch(e){} }
+  if(jm){ try{ const j = JSON.parse(jm[0]); if(j.color||j.diag) return {diag:String(j.diag||"—"), color:String(j.color||""), why:String(j.why||"—"), timeline:Object.assign({today:"—",d3:"—",w1:"—",w2:"—",m1:"",m3:""}, j.timeline||{}), care:[].concat(j.care||[]).map(String), red:[].concat(j.red||[]).map(String)}; }catch(e){} }
   const pick = re => { const m = t.match(new RegExp("^[ \\t\\-•*·\\d.)]*(?:"+re+")\\s*[:：]\\s*(.+)$", "m")); return m ? m[1].trim().replace(/^[(（](.*)[)）]$/,"$1").trim() : ""; };
   const list = x => x.split(/[,，·、;]|\s\/\s/).map(v=>v.trim().replace(/^[-•*\d.)\s]+/,"")).filter(Boolean);
   const colorLine = pick("긴급도|긴급|신호등|색깔|색"); let cm = colorLine.match(/초록|노랑|빨강/);
   if(!cm) cm = t.replace(/^.*빨강 신호.*$/mg,"").match(/초록|노랑|빨강/);
   return {diag: pick("예상되는 상태|예상 상태|예상|진단|상태")||"—", color: cm ? cm[0] : "", why: pick("까닭|이유|근거")||"—",
-    timeline:{today:pick("오늘")||"—", d3:pick("3일 뒤|3일뒤|3일 후|3일")||"—", w1:pick("1주 뒤|1주뒤|1주 후|일주일 뒤|일주일|1주")||"—", w2:pick("2주 뒤|2주뒤|2주 후|2주")||"—"},
+    timeline:{today:pick("오늘")||"—", d3:pick("3일 뒤|3일뒤|3일 후|3일")||"—", w1:pick("1주 뒤|1주뒤|1주 후|일주일 뒤|일주일|1주")||"—", w2:pick("2주 뒤|2주뒤|2주 후|2주")||"—", m1:pick("1달 뒤|한 달 뒤|한달 뒤|1개월|1달")||"", m3:pick("3달 뒤|석 달 뒤|세 달 뒤|3개월|3달")||""},
     care:list(pick("할 것|할것|대처|지금 할 수 있는 것|지금 할 것|돌봄")), red:list(pick("빨강 신호|빨강신호|위험 신호|병원 신호|빨강"))};
 }
 function readAnswer(forceColor){
@@ -1104,7 +1118,7 @@ function useTest(){ applyAnswer(testPredict(cur), "시험 답"); }
 async function directAsk(){
   $("predSide").innerHTML = `<h2>앞날 예측</h2><div class="hint"><span class="busy"></span>클로드에게 묻는 중…</div>`;
   try{
-    const j = await callClaude(`학생 상황 :\n${caseText(cur)}\n\n예상되는 상태 이름 하나, 긴급도(초록/노랑/빨강 중 하나 · 애매하면 안전한 쪽), 그렇게 본 까닭 한 문장, 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 몸이 어떻게 될지 각 한 문장, 지금 할 수 있는 것 3~4개, 빨강으로 바뀌는 신호 2~4개를 내라. 꼴 : {"diag":"…","color":"노랑","why":"…","timeline":{"today":"…","d3":"…","w1":"…","w2":"…"},"care":["…"],"red":["…"]}`);
+    const j = await callClaude(`학생 상황 :\n${caseText(cur)}\n\n예상되는 상태 이름 하나, 긴급도(초록/노랑/빨강 중 하나 · 애매하면 안전한 쪽), 그렇게 본 까닭 한 문장, 오늘 · 3일 뒤 · 1주 뒤 · 2주 뒤 · 1달 뒤 · 3달 뒤 몸이 어떻게 될지 각 한 문장, 지금 할 수 있는 것 3~4개, 빨강으로 바뀌는 신호 2~4개를 내라. 꼴 : {"diag":"…","color":"노랑","why":"…","timeline":{"today":"…","d3":"…","w1":"…","w2":"…","m1":"…","m3":"…"},"care":["…"],"red":["…"]}`);
     if(!COLORS.includes(j.color)) j.color = "빨강"; applyAnswer(j, "클로드 (열쇠)");
   }catch(e){ toast(e.message); drawPred(); }
 }

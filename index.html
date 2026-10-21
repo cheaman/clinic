@@ -370,7 +370,7 @@ svg .anim-exam{transform-box:fill-box;transform-origin:50% 90%;animation:nod 1.6
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-21 21:20";
+const VER="v0.6", MADE = "2026-10-21 17:10", FIXED="2026-10-21 21:45";
 const CHANGES = [["v0.6","2026-10-21","아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
@@ -659,6 +659,7 @@ function painAt(inn, part, l){
 // 쌍둥이 겉모습(앞) — 눌리지 않는 그림용(보건실 작은 쌍둥이 · 앞날 예측) · data-p 로 부위 자리를 찾음
 function twinOutline(mood){ return TWIN_F.map(([n,s]) => s.replace("/>", ` data-p="${n}" fill="#e8f7ff" stroke="#1fa796" stroke-width="5"/>`)).join("") + twinFace(false, mood); }
 const DESK = `<rect x="150" y="450" width="150" height="20" fill="#c9a37a"/><rect x="158" y="470" width="134" height="76" fill="#bf9765"/><rect x="158" y="470" width="10" height="90" fill="#a98357"/><rect x="282" y="470" width="10" height="90" fill="#a98357"/><rect x="200" y="486" width="50" height="8" rx="3" fill="#a98357"/>`;   // 책상(앞판 있음 · 선생님 아랫몸을 가림)
+let rsT = 0; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if(page === 1 && rst === 0) drawRoom(); }, 250); });
 function drawRoom(){
   const color = cur.ai ? cur.ai.color : "";
   const examSay = color==="빨강" ? "많이 아프겠어요 — 지금 바로 어른 · 병원이에요" : color==="노랑" ? "쉬면서 보되 며칠 안에 병원에 가요" : color==="초록" ? "쉬면 괜찮아질 거예요 · 얼음 15분" : hasSym() ? "어디가 아픈지 볼게요 … 선생님 화면에서 더 말해 줘요" : "먼저 몸 쌍둥이에서 아픈 곳을 눌러 주면 잘 볼 수 있어요";
@@ -675,8 +676,11 @@ function drawRoom(){
   }
   const say = lie ? examSay : A.say ? A.say(fever, mePt(cur.part), hgt) : "";
   const front = !!T && !lie && rst >= 2;   // 서서 하는 동작 — 선생님을 침대 앞에 (v0.6g · 키 재기 때 침대 뒤에 가려짐)
-  $("room").innerHTML = `<svg viewBox="0 0 640 666" preserveAspectRatio="xMidYMax slice">
-    <rect width="640" height="430" fill="#dff0ff"/><rect y="430" width="640" height="236" fill="#f3e6d2"/><rect y="424" width="640" height="10" fill="#c9a37a"/>
+  const rb = $("room").getBoundingClientRect(), ratio = rb.height > 40 ? rb.width / rb.height : 800 / 638;
+  const vh = Math.min(666, Math.max(570, Math.round(640 / ratio))), vw = Math.max(640, Math.round(vh * ratio)), vy = 666 - vh, vx = Math.round(320 - vw / 2);
+  const X = q => (((q / 100) * 640 - vx) / vw * 100).toFixed(1) + "%", Y = q => (((156 + (q / 100) * 510) - vy) / vh * 100).toFixed(1) + "%";   // 예전 1280×800 기준 % → 지금 칸 %
+  $("room").innerHTML = `<svg viewBox="${vx} ${vy} ${vw} ${vh}" preserveAspectRatio="${ratio < 640 / 666 ? "xMidYMax slice" : "xMidYMid meet"}">
+    <rect x="-600" width="1840" height="430" fill="#dff0ff"/><rect x="-600" y="430" width="1840" height="236" fill="#f3e6d2"/><rect x="-600" y="424" width="1840" height="10" fill="#c9a37a"/>
     <rect x="40" y="60" width="200" height="170" rx="8" fill="#fff8d8" stroke="#fff" stroke-width="10"/><line x1="140" y1="60" x2="140" y2="230" stroke="#fff" stroke-width="8"/><line x1="40" y1="145" x2="240" y2="145" stroke="#fff" stroke-width="8"/><circle class="anim-sun" cx="200" cy="100" r="22" fill="#ffcf4a"/>
     <rect x="290" y="120" width="130" height="200" rx="6" fill="#fff" stroke="#9fb3c8" stroke-width="3"/><line x1="290" y1="186" x2="420" y2="186" stroke="#9fb3c8" stroke-width="3"/><line x1="290" y1="252" x2="420" y2="252" stroke="#9fb3c8" stroke-width="3"/>
     <rect x="302" y="136" width="22" height="36" fill="#9ad0ff"/><rect x="334" y="136" width="22" height="36" fill="#ffb3a7"/><rect x="366" y="136" width="22" height="36" fill="#ffe08a"/><rect x="302" y="200" width="50" height="36" fill="#cde8d2"/><rect x="362" y="200" width="40" height="36" fill="#f9d6ea"/><rect x="302" y="266" width="100" height="36" fill="#e9eef5"/>
@@ -688,8 +692,8 @@ function drawRoom(){
     <g class="anim-twin" onclick="go(2)"><rect x="460" y="120" width="150" height="230" rx="14" fill="#e8f7ff" stroke="#1fa796" stroke-width="3" stroke-dasharray="7 5"/><g class="in" transform="translate(422,122) scale(.355)">${twinOutline(hasSym()?"hurt":"fine")}</g></g>
     ${me}${props}
     <rect x="590" y="380" width="36" height="44" rx="4" fill="#c9a37a"/><ellipse class="anim-plant" cx="608" cy="372" rx="28" ry="18" fill="#5fb36b"/></svg>
-    ${rst>=2 && T ? '' : '<div class="lbl" style="left:25%;top:48%">보건 선생님 (AI)</div>'}<div class="lbl tw" style="left:66%;top:12%">내 몸 쌍둥이</div>${rst===0?`<div class="lbl me" style="left:9%;top:88%">나 · ${esc(D.settings.nick)}</div>`:""}
-    ${rst===0 ? `<div class="bubble" style="left:3%;top:37%">어서 와요. 어디가 아픈가요?<br>몸 쌍둥이를 눌러 알려 줘요</div>` : rst===3 ? `<div class="bubble" style="left:3%;top:${T?"22%":"30%"}">${esc(say)}</div><button class="b" style="position:absolute;right:4%;bottom:5%" onclick="rst=0;drawRoom()">🙂 다 했어요</button>` : ""}`;
+    ${rst>=2 && T ? '' : `<div class="lbl" style="left:${X(25)};top:${Y(48)}">보건 선생님 (AI)</div>`}<div class="lbl tw" style="left:${X(66)};top:${Y(12)}">내 몸 쌍둥이</div>${rst===0?`<div class="lbl me" style="left:${X(9)};top:${Y(88)}">나 · ${esc(D.settings.nick)}</div>`:""}
+    ${rst===0 ? `<div class="bubble" style="left:${X(3)};top:${Y(37)}">어서 와요. 어디가 아픈가요?<br>몸 쌍둥이를 눌러 알려 줘요</div>` : rst===3 ? `<div class="bubble" style="left:${X(3)};top:${Y(T?22:30)}">${esc(say)}</div><button class="b" style="position:absolute;right:4%;bottom:5%" onclick="rst=0;drawRoom()">🙂 다 했어요</button>` : ""}`;
   $("actBtns").innerHTML = Object.entries(ACTS).map(([k,a])=>`<button class="b${act===k&&rst?" sel":""}" style="font-size:14px;padding:6px 4px" onclick="doAct('${k}')">${a.n}</button>`).join("");
   painAt($("room").querySelector("g.anim-twin g.in"), cur.part, hasSym() ? 2 : 0);
   $("p1Teacher").style.opacity = hasSym() ? "1" : ".45"; $("p1Next").textContent = hasSym() ? "👩‍⚕️ ③ 선생님에게 보여 주기" : "🧍 ② 내 몸 쌍둥이 — 여기서 시작"; drawNav();

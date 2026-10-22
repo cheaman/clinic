@@ -115,6 +115,7 @@ textarea{resize:vertical;min-height:54px}
 .light .dots i.g{background:var(--g)}.light .dots i.y{background:var(--y)}.light .dots i.r{background:var(--r)}
 .light .dots i.on{opacity:1;box-shadow:0 0 0 4px rgba(0,0,0,.07)}
 .light b{font:22px "Jua"}
+.light.big .dots i{width:40px;height:40px}.light.big b{font:30px "Jua"}
 .c-초록{background:var(--gbg);border-color:#b7e0c6}.c-노랑{background:var(--ybg);border-color:#efd27a}.c-빨강{background:var(--rbg);border-color:#f1b2ab}
 .time{display:flex;margin:2px 0}
 .time div{flex:1;text-align:center;font:15px "Jua";color:var(--sub);position:relative;padding-top:20px;cursor:pointer}
@@ -347,6 +348,7 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
         <div class="chiprow"><span class="cl">몸이 아파요</span><div class="cs" id="sickChips"></div></div>
         <div class="chiprow"><span class="cl">언제부터</span><div class="cs" id="whenChips"></div></div>
         <div class="chiprow"><span class="cl">지금 상태</span><div class="cs" id="stateChips"></div></div>
+        <div class="chiprow"><span class="cl">전에 다친 적</span><div class="cs" id="histChips"></div></div>
         <textarea id="symText" placeholder="내 말로 적어요 — 예 : 배드민턴 치다가 접질렀어요"></textarea>
       </div>
       <div class="card">
@@ -421,6 +423,7 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
       <div class="hint" id="keyState"></div>
       <div class="row" style="margin-top:6px"><span class="hint">모델</span><select id="modelIn" style="max-width:260px"><option>claude-sonnet-5-5</option><option>claude-haiku-5-5</option><option>claude-opus-5-5</option></select></div>
       <div class="row" style="margin-top:6px"><label class="hint"><input type="checkbox" id="testIn"> 시험 답으로 돌리기 (AI 없이 흐름만 · 발표 연습)</label></div>
+      <div class="row" style="margin-top:6px"><span class="hint">내 키 (cm)</span><input type="number" id="hgtIn" min="120" max="200" placeholder="비우면 아바타 값" style="max-width:130px"><span class="hint">① 키 재기에서 이 값 · 이 기기에만 · 사례엔 안 남아요</span></div>
     </div>
     <div class="card">
       <h3>자료 <span class="hint">사례는 이 기기 안에만</span></h3>
@@ -432,8 +435,8 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v1.0", MADE = "2026-10-21 17:10", FIXED="2026-10-22 14:54";
-const CHANGES = [["v1.0","2026-10-22","부원 시험 녹음(10-22) 진짜 셋 — A 질문 글을 답 칸에 붙여 넣으면 「한 문장」 이 경과로 뜨던 것 → 틀 글자는 비우고 「이건 질문 글이에요」 알림 · B 시험 답을 GPT 답으로 알던 것 → ④ 결과 맨 위 「시험 답 — 연습용 · 진짜 AI 아님」 띠 · 단추는 아래 작게 · 심한 신호가 겹치면 3일 뒤 「아직 많이 아파요」 · 색 한 칸 위 · C 「뭐 어떡하라는 거지」 → 판마다 「👉 지금 할 일」 한 줄 · 다음 단추 글 「👉 여기 눌러요 — ○○」"],["v0.9","2026-10-22","따라 하기 — 35번 바질 것처럼 화면 위 실제 자리를 밝히고(노란 테두리) 글 상자로 설명 · ① 보건실 → ② 디지털 트윈 → ⑤ 탐구 벽을 넘기며 열한 걸음 · 🔊 읽어 주기 · 처음 안내 다섯 장 끝 「화면에서 따라 하기」 · ① «어떻게 쓰나요» 카드 단추 · 폰에선 글 상자가 밝힌 곳 반대쪽에 가로로"],["v0.8","2026-10-22","사물 자리를 리그 뼈대 기준으로 — 청진기 · 체온계 · 물컵 · 얼음 · 밴드는 손에 쥐고(손 끝 좌표) · 키 자는 오른쪽 벽 바닥부터 등 대고 · 시력표는 창문 아래 벽(왼쪽 보며 한 눈 가림) · 세면대는 허리 높이 · ④ 앞날 예측 : 아픈 정도가 크면 벤치에 앉아 다친 발을 받침에 올리고 쉼(병이면 웅크림) → 나아지며 절뚝 걷기 → 걷기 → 달리기로 이어서 바뀜 (전무님 «상태에 따라 동작이 달라져야»)"],["v0.7","2026-10-22","캐릭터 동작을 관절 리그로(전무님 «얼굴은 아동틱 OK · 동작은 정교하게» · 시안 나 · 게임 문법) — 목 · 어깨 · 팔꿈치 · 엉덩이 · 무릎이 시간에 따라 움직임 · 숨쉬기 · 깜빡임 · 머리카락 뒤처짐 · 통통 · 흔들기 · 이모지 스티커 없앰 · ① 보건실 : 걸어가기 · 선생님이 무릎 굽혀 앉아 손을 뻗어 살핌 · 내 반응(움찔 · 추워함 · 기쁨 · 찡그림)을 예비 → 본 → 돌아옴 동작으로 · ③ 선생님 쓰기 · 말할 때 끄덕 · ④ 앞날 예측 : 그림 셋 교체 → 큰 아바타 하나가 걸으며 붓기 · 절뚝 · 속도 · 얼음 → 붕대가 이어서 변함 · 회복 % 막대 · 처음엔 당겨 보다 멀어짐"],["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 사람처럼 눌러 본 뒤(06:30) — ② 「✔ 저장」 단추 · ④ 아래 줄이 옆 판 바닥에 붙박이(스크롤 없이 보임) · 사례 저장 뒤 단추가 「⑤ 탐구 벽 보기」 로 · 붙여 넣기 안내에 1달 · 3달 · 폰 세로에서 위 띠가 옆으로 넘쳐 화면이 줄어 보이던 것 → 띠 두 줄로 · 아래 띠 글자가 두 줄로 꺾이던 것 → 한 줄 · 폰에선 사례 · 점수 알약 숨김 · 안내 셋째 장에 1달 · 3달 · ⑤ 탐구 벽이 폰에선 작은 판 둘 → 세로 한 줄로 길게 · 위 띠 세 줄 → 두 줄 · 성적표 표는 옆으로 밀어 봄 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const VER="v1.1", MADE = "2026-10-21 17:10", FIXED="2026-10-22 16:40";
+const CHANGES = [["v1.1","2026-10-22","부원 시험 녹음 «있으면 좋음» 넷 — D ⚙ 설정 「내 키 (cm)」(있으면 키 재기가 그 값) · E ② 「전에 다친 적」 칩 → 질문 글에 한 줄 · F 손에 든 소품 이름표(청진기 · 비접촉 체온계 · 물컵 · 얼음주머니 · 밴드) · ④ 얼음 이름표 · G ④ 결과 신호등 크게"],["v1.0","2026-10-22","부원 시험 녹음(10-22) 진짜 셋 — A 질문 글을 답 칸에 붙여 넣으면 「한 문장」 이 경과로 뜨던 것 → 틀 글자는 비우고 「이건 질문 글이에요」 알림 · B 시험 답을 GPT 답으로 알던 것 → ④ 결과 맨 위 「시험 답 — 연습용 · 진짜 AI 아님」 띠 · 단추는 아래 작게 · 심한 신호가 겹치면 3일 뒤 「아직 많이 아파요」 · 색 한 칸 위 · C 「뭐 어떡하라는 거지」 → 판마다 「👉 지금 할 일」 한 줄 · 다음 단추 글 「👉 여기 눌러요 — ○○」"],["v0.9","2026-10-22","따라 하기 — 35번 바질 것처럼 화면 위 실제 자리를 밝히고(노란 테두리) 글 상자로 설명 · ① 보건실 → ② 디지털 트윈 → ⑤ 탐구 벽을 넘기며 열한 걸음 · 🔊 읽어 주기 · 처음 안내 다섯 장 끝 「화면에서 따라 하기」 · ① «어떻게 쓰나요» 카드 단추 · 폰에선 글 상자가 밝힌 곳 반대쪽에 가로로"],["v0.8","2026-10-22","사물 자리를 리그 뼈대 기준으로 — 청진기 · 체온계 · 물컵 · 얼음 · 밴드는 손에 쥐고(손 끝 좌표) · 키 자는 오른쪽 벽 바닥부터 등 대고 · 시력표는 창문 아래 벽(왼쪽 보며 한 눈 가림) · 세면대는 허리 높이 · ④ 앞날 예측 : 아픈 정도가 크면 벤치에 앉아 다친 발을 받침에 올리고 쉼(병이면 웅크림) → 나아지며 절뚝 걷기 → 걷기 → 달리기로 이어서 바뀜 (전무님 «상태에 따라 동작이 달라져야»)"],["v0.7","2026-10-22","캐릭터 동작을 관절 리그로(전무님 «얼굴은 아동틱 OK · 동작은 정교하게» · 시안 나 · 게임 문법) — 목 · 어깨 · 팔꿈치 · 엉덩이 · 무릎이 시간에 따라 움직임 · 숨쉬기 · 깜빡임 · 머리카락 뒤처짐 · 통통 · 흔들기 · 이모지 스티커 없앰 · ① 보건실 : 걸어가기 · 선생님이 무릎 굽혀 앉아 손을 뻗어 살핌 · 내 반응(움찔 · 추워함 · 기쁨 · 찡그림)을 예비 → 본 → 돌아옴 동작으로 · ③ 선생님 쓰기 · 말할 때 끄덕 · ④ 앞날 예측 : 그림 셋 교체 → 큰 아바타 하나가 걸으며 붓기 · 절뚝 · 속도 · 얼음 → 붕대가 이어서 변함 · 회복 % 막대 · 처음엔 당겨 보다 멀어짐"],["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 사람처럼 눌러 본 뒤(06:30) — ② 「✔ 저장」 단추 · ④ 아래 줄이 옆 판 바닥에 붙박이(스크롤 없이 보임) · 사례 저장 뒤 단추가 「⑤ 탐구 벽 보기」 로 · 붙여 넣기 안내에 1달 · 3달 · 폰 세로에서 위 띠가 옆으로 넘쳐 화면이 줄어 보이던 것 → 띠 두 줄로 · 아래 띠 글자가 두 줄로 꺾이던 것 → 한 줄 · 폰에선 사례 · 점수 알약 숨김 · 안내 셋째 장에 1달 · 3달 · ⑤ 탐구 벽이 폰에선 작은 판 둘 → 세로 한 줄로 길게 · 위 띠 세 줄 → 두 줄 · 성적표 표는 옆으로 밀어 봄 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
 const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
@@ -476,7 +479,7 @@ function load(){
   return d;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(D)); }catch(e){ toast("저장 못 함 — 브라우저 저장 공간을 확인해요"); } }
-function newCase(){ return {id:0, made:"", part:"", parts:[], spots:[], exam:{}, side:"", how:[], since:[], text:"", qa:[], ai:null, real:{diag:"",hospital:"",treat:"",healed:""}, three:{gpt:{color:"",diag:""},gemini:{color:"",diag:""},claude:{color:"",diag:""}}, score:{diag:"",urgent:"",care:""}, wrong:"(없음)", memo:"", ver:VER}; }
+function newCase(){ return {id:0, made:"", part:"", parts:[], spots:[], exam:{}, side:"", how:[], since:[], text:"", hist:"", qa:[], ai:null, real:{diag:"",hospital:"",treat:"",healed:""}, three:{gpt:{color:"",diag:""},gemini:{color:"",diag:""},claude:{color:"",diag:""}}, score:{diag:"",urgent:"",care:""}, wrong:"(없음)", memo:"", ver:VER}; }
 function isTest(){ return D.settings.test || location.search.includes("test"); }   // v0.5 — 열쇠가 없어도 시험 답이 아님(복사 · 붙여넣기가 기본)
 function hasKey(){ return !!D.settings.key; }
 function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(()=>e.classList.remove("on"), 2200); }
@@ -964,7 +967,13 @@ function actPose(p, R, u, t){
   else { p.head += 8; p.aR = [8 + Math.sin(t * TAU / 2) * 3, 20]; }
 }
 // 움직이는 소품 — 매 틀 손 자리에 : 청진기(벨 + 줄) · 체온계(이마 앞) · 물컵(기울임) · 거품 · 얼음 · 밴드(rst 3 선생님 손 → rst 4 아픈 자리)
-function roomProps(R, me, tc, u, t, part){
+const LBL = (x, y, t) => `<g><rect x="${(x - 44).toFixed(1)}" y="${(y - 15).toFixed(1)}" width="88" height="20" rx="7" fill="#fff" stroke="#9fb3c8" stroke-width="1.5"/><text x="${x.toFixed(1)}" y="${(y - 1).toFixed(1)}" text-anchor="middle" font-size="12" font-family="Jua" fill="#2f3a4a">${t}</text></g>`;   // v1.1 F 이름표 (predfig 효과 반을 붙이면 리그가 매 틀 다시 그려 늘 투명 — 안 붙임)
+function roomProps(R, me, tc, u, t, part){   // v1.1 F — 손에 든 소품 옆 이름표 (부원 «이거 밴드고 이건 뭐야?»)
+  const s0 = roomProps0(R, me, tc, u, t, part); if(!s0 || R.rst !== 3) return s0;
+  const name = {steth:"청진기", temp:"비접촉 체온계", water:"물컵", ice:"얼음주머니", band:"밴드"}[R.act]; if(!name) return s0;
+  const h = handWorld(R.act === "water" ? me : tc, "R"); return s0 + LBL(h[0], h[1] - 30, name);
+}
+function roomProps0(R, me, tc, u, t, part){
   const a = R.act, r = R.rst; if(r < 3 || r > 4 || R.lie) return "";
   if(a === "steth" && r === 3){ const h = handWorld(tc, "R"), c = rigWorld(tc, -8, -16, true); return `<path d="M${c[0].toFixed(1)} ${c[1].toFixed(1)} Q${((c[0] + h[0]) / 2).toFixed(1)} ${(Math.max(c[1], h[1]) + 26).toFixed(1)} ${h[0].toFixed(1)} ${h[1].toFixed(1)}" stroke="#2f3a4a" stroke-width="2.6" fill="none"/><circle cx="${h[0].toFixed(1)}" cy="${h[1].toFixed(1)}" r="7" fill="#2f3a4a" stroke="#fff" stroke-width="2.4"/>`; }
   if(a === "temp" && r === 3){ const h = handWorld(tc, "R"); return `<g transform="translate(${h[0].toFixed(1)},${h[1].toFixed(1)}) scale(${tc.face},1)"><rect x="-4" y="-8" width="26" height="9" rx="4" fill="#fff" ${OUT}/><rect x="-6" y="-2" width="9" height="14" rx="3" fill="#9fb3c8" ${OUT}/><circle cx="22" cy="-3.5" r="2.4" fill="#d93025"/></g>`; }
@@ -1078,7 +1087,7 @@ function demoTest(q){   // v1.0 시험 고리 — p1 · p2 · p3 · ask · paste
   const severe = q.includes("severe");
   cur.spots = severe ? [{part:"허리", how:["삠","부딪힘"], since:["피 남","열 남","토할 것 같음","멍"]}] : [{part:"왼쪽 발목", how:["삠"], since:["붓기"]}]; try{ syncSpots(); }catch(e){}
   cur.qa = [{q:"피가 계속 나요?", options:["계속 나요","멈췄어요"], a: severe ? "계속 나요" : "멈췄어요"}];
-  if(q === "p1"){ go(1); return; } if(q === "p2"){ go(2); return; } if(q === "p3"){ go(3); return; } if(q === "p5"){ go(5); return; }
+  if(q === "set"){ go(1); openSet(); return; } if(q === "p1"){ go(1); return; } if(q === "p2"){ go(2); return; } if(q === "p3"){ go(3); return; } if(q === "p5"){ go(5); return; }
   if(q.startsWith("test")){ useTest(); go(4); return; }
   if(q === "paste"){ go(4); askDraft = askText(cur); $("ansIn").value = askDraft; readAnswer(); clearTimeout($("toast")._t); return; }
   go(4);
@@ -1097,7 +1106,7 @@ function drawRoom(){
   const examSay = color==="빨강" ? "많이 아프겠어요 — 지금 바로 어른 · 병원이에요" : color==="노랑" ? "쉬면서 보되 며칠 안에 병원에 가요" : color==="초록" ? "쉬면 괜찮아질 거예요 · 얼음 15분" : hasSym() ? "어디가 아픈지 볼게요 … 선생님 화면에서 더 말해 줘요" : "먼저 디지털 트윈에서 아픈 곳을 눌러 주면 잘 볼 수 있어요";
   const A = ACTS[act] || ACTS.bed, T = A.t, M = A.m, lie = act === "bed";
   const seed = (D.settings.nick.length * 7 + D.cases.length * 3), all = [...cur.how, ...cur.since, ...cur.qa.map(x=>x.a)].join(" ");
-  const fever = cur.how.some(h=>/열|감기|목 아픔|두통|어지러움/.test(h)) || cur.since.includes("열 남"), hgt = 152 + seed % 21;
+  const fever = cur.how.some(h=>/열|감기|목 아픔|두통|어지러움/.test(h)) || cur.since.includes("열 남"), hgt = D.settings.height || (152 + seed % 21);   // v1.1 D — 설정한 키가 있으면 그 값 (부원 «키 랜덤이야?»)
   const temp = (cur.exam && cur.exam.temp) || (fever ? (37.8 + (seed % 9) / 10) : (36.4 + (seed % 7) / 10)).toFixed(1);
   const ctx = lastCtx = {f: fever, pt: mePt(cur.part), h: hgt, temp, part: cur.part || "", how: cur.how, all, breath: /숨 가쁨|답답함/.test(all)};
   const vars = (g, dx, dy) => g.replace('class="anim-me goto"', `class="anim-me goto" style="--dx:${dx}px;--dy:${dy}px"`).replace('class="anim-teacher tgoto"', `class="anim-teacher tgoto" style="--dx:${dx}px;--dy:${dy}px"`);
@@ -1188,6 +1197,7 @@ function drawBody(){
   $("howTitle").innerHTML = `<span class="no">1</span>${A ? esc(spotName(A))+" 는 " : ""}어떻게 아픈가요 <span class="hint">여러 개 눌러도 돼요${A ? "" : " · 먼저 디지털 트윈을 눌러요"}</span>`;
   const chips = (id, list, k, cls) => $(id).innerHTML = list.map(h=>`<button class="b ${cls}${A&&A[k].includes(h)?" sel":""}" onclick="tog('${k}','${h}')">${h}</button>`).join("");
   chips("howChips", howFor(A && A.part ? [A.part] : []), "how", ""); chips("sickChips", SICK, "how", ""); chips("whenChips", WHEN, "since", "mint"); chips("stateChips", STATE, "since", "mint");
+  $("histChips").innerHTML = ["없음","같은 곳 다친 적","자주 다침","수술 · 깁스한 적"].map(h=>`<button class="b dim${cur.hist===h?" sel":""}" onclick="cur.hist='${h}';drawBody()">${h}</button>`).join("");   // v1.1 E — 사례마다 하나 (부원 «사람마다 낫는 기간이 다르잖아»)
   $("howLbl").textContent = A && A.part ? "그 부위는" : "다쳤어요";
   $("nextSpotRow").style.display = A && (A.how.length || A.since.length) ? "flex" : "none";
   $("toTeacher").style.opacity = A ? ".55" : "1"; drawNav();
@@ -1284,7 +1294,7 @@ function predProps(inn, part, l, K){
     if(l === 3) h += `<path d="M262 70 q8 12 0 18 q-8 -6 0 -18z M252 100 q7 11 0 16 q-7 -5 0 -16z" fill="#7cc4f5"/><path d="M296 20 q10 -14 20 0 q10 -14 20 0" fill="none" stroke="#d93025" stroke-width="3" opacity=".7"/>`;
     if(l === 2 && K.fever) h += `<rect x="236" y="150" width="168" height="26" rx="13" fill="#f9a8d4" opacity=".55"/>`;   // 목도리 · 담요 느낌
   } else {
-    if(l === 3) h += `<g transform="translate(${cx+34},${cy-30})"><path d="M0 0 q-16 -26 0 -34 q16 8 0 34z" fill="#9ad0ff" stroke="#2457c5" stroke-width="2.5"/><rect x="-10" y="-4" width="20" height="10" rx="4" fill="#2457c5"/><text x="0" y="-14" text-anchor="middle" font-size="14" fill="#fff" font-family="Jua">❄</text></g>`;
+    if(l === 3) h += LBL(cx + 34, cy - 76, "얼음") + `<g transform="translate(${cx+34},${cy-30})"><path d="M0 0 q-16 -26 0 -34 q16 8 0 34z" fill="#9ad0ff" stroke="#2457c5" stroke-width="2.5"/><rect x="-10" y="-4" width="20" height="10" rx="4" fill="#2457c5"/><text x="0" y="-14" text-anchor="middle" font-size="14" fill="#fff" font-family="Jua">❄</text></g>`;
     if(l >= 2 && K.leg) h += `<g><line x1="${cx>320?215:425}" y1="190" x2="${cx>320?205:435}" y2="600" stroke="#a98357" stroke-width="8" stroke-linecap="round"/><rect x="${cx>320?195:405}" y="180" width="40" height="14" rx="7" fill="#c9a37a"/></g>`;   // 목발
     if(l === 2 && K.hand) h += `<path d="M${cx-30} ${cy+10} q40 -60 90 -10" fill="none" stroke="#fff" stroke-width="14" stroke-linecap="round"/><path d="M${cx-30} ${cy+10} q40 -60 90 -10" fill="none" stroke="#9bb0c0" stroke-width="3" stroke-dasharray="6 6" stroke-linecap="round"/>`;   // 팔걸이 띠
   }
@@ -1318,7 +1328,7 @@ function drawPred(){
   const care = a.care || [], tip = {today: care.slice(0,2).join(" · ") || "쉬기", d3: care.slice(2).join(" · ") || care.join(" · ") || "쉬기", w1: K.sick ? "평소대로 · 무리하지 않기" : "가볍게 움직이기 · 무리하지 않기", m1: K.sick ? "다 나았어요 · 손 씻기 · 잘 자기 습관" : "다 나았어요 · 다치지 않게 준비 운동", m3: "평소대로 · 건강 기록 남기기", w2: K.sick ? "평소대로 · 다시 아프면 병원" : "운동은 천천히 · 다시 아프면 병원"}[tl];
   P.innerHTML = `${a.model === "시험 답" ? `<div class="card" style="background:#fff3f2;border-color:#f1c7c3"><b style="font:17px 'Jua';color:#8a1f17">⚠ 시험 답 — 연습용이에요 · 진짜 AI 가 아니에요</b><div class="hint" style="margin-top:3px">갈래마다 정해 둔 글이라 늘 비슷해요 · 진짜 탐구는 📋 질문 글을 복사해 GPT · 제미나이 · 클로드에 묻고 답을 붙여 넣어요 <button class="b sm" onclick="cur.ai=null;drawPred()">🤖 AI 에게 묻기로</button></div></div>` : ""}
     <div class="now1">${cur.id ? "✔ 저장됨 → 👉 아래 「⑤ 탐구 벽 보기」" : "👉 지금 할 일 — 시간 줄(오늘 → 3달 뒤)을 눌러 보고 → 아래 「📌 사례로 저장」"}</div>
-    <div class="card c-${a.color}"><div class="light"><div class="dots">${COLORS.map(c=>`<i class="${{초록:"g",노랑:"y",빨강:"r"}[c]}${a.color===c?" on":""}"></i>`).join("")}</div><div><b>${a.color} · ${{초록:"집에서 돌봐도 돼요",노랑:"며칠 안에 병원",빨강:"지금 바로 병원 · 어른에게"}[a.color]}</b><div class="hint">${esc(a.diag)} · ${esc(a.why)}</div></div></div></div>
+    <div class="card c-${a.color}" style="padding:14px 16px"><div class="light big"><div class="dots">${COLORS.map(c=>`<i class="${{초록:"g",노랑:"y",빨강:"r"}[c]}${a.color===c?" on":""}"></i>`).join("")}</div><div><b>${a.color} · ${{초록:"집에서 돌봐도 돼요",노랑:"며칠 안에 병원",빨강:"지금 바로 병원 · 어른에게"}[a.color]}</b><div class="hint">${esc(a.diag)} · ${esc(a.why)}</div></div></div></div>
     <div class="card"><div class="time">${KS.map(k=>`<div class="${k===tl?"on":""}${KS.indexOf(k)<KS.indexOf(tl)?" done":""}" onclick="tl='${k}';drawPred()">${names[k]}</div>`).join("")}</div></div>
     <div class="card"><h3><span class="no">${names[tl]}</span>${place[tl]} · 디지털 트윈은 이렇게</h3><div class="kv"><span>몸</span><b>${esc(tlText(tl))}</b></div><div class="kv"><span>할 것</span><b>${esc(tip)}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
     <div class="card"><h3><span class="no">💡</span>지금 할 수 있는 것</h3><div class="hint">${esc(care.join(" · "))}</div><div class="hint" style="color:#8a1f17;margin-top:4px">빨강 신호 : ${esc((a.red||[]).join(" · "))}</div></div>
@@ -1421,7 +1431,7 @@ function examText(c){ const e = c.exam || {}; return [e.temp ? "체온 " + e.tem
 function caseText(c){
   const sp = (c.spots && c.spots.length) ? c.spots : [{part:(partsOf(c)[0]||""), how:c.how, since:c.since}];
   const lines = sp.map((x,i)=>`- ${x.part||"몸 안 (부위 없음)"}${i===0&&sp.length>1?" (주된 곳)":""} : ${x.how.join(", ")||"무슨 일인지 모름"} / ${x.since.join(", ")||"언제부터 · 상태 모름"}`).join("\n");
-  return `부위 : ${partsOf(c).join(", ")||"(몸 안 · 부위 없음)"}\n부위별로 :\n${lines}\n학생 말 : ${c.text||"(없음)"}` + (examText(c) ? `\n보건실에서 잰 것 : ${examText(c)}` : "") + (c.qa.length?`\n되묻기 답 :\n`+c.qa.map(x=>`- ${x.q} → ${x.a}`).join("\n"):"");
+  return `부위 : ${partsOf(c).join(", ")||"(몸 안 · 부위 없음)"}\n부위별로 :\n${lines}\n학생 말 : ${c.text||"(없음)"}\n전에 다친 적 : ${c.hist||"(안 적음)"}` + (examText(c) ? `\n보건실에서 잰 것 : ${examText(c)}` : "") + (c.qa.length?`\n되묻기 답 :\n`+c.qa.map(x=>`- ${x.q} → ${x.a}`).join("\n"):"");
 }
 async function callClaude(user){
   const r = await fetch("https://api.anthropic.com/v1/messages", {method:"POST", headers:{"content-type":"application/json","x-api-key":D.settings.key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
@@ -1506,12 +1516,13 @@ function importJson(inp){ const f = inp.files[0]; if(!f) return; const r = new F
 function eraseAll(){ if(!confirm("사례를 모두 지울까요? 번호는 이어서 붙어요")) return; D.cases = []; save(); drawTop(); toast("모두 지웠어요"); }
 
 /* 설정 */
-function openSet(){ $("keyIn").value = ""; $("keyState").textContent = D.settings.key ? "열쇠 있음 (…"+D.settings.key.slice(-4)+") · 이 기기에만" : "열쇠 없음 — 질문 글 복사 · 답 붙여넣기로 돌아요 (이게 기본)"; $("modelIn").value = D.settings.model; $("testIn").checked = D.settings.test;
+function openSet(){ $("keyIn").value = ""; $("keyState").textContent = D.settings.key ? "열쇠 있음 (…"+D.settings.key.slice(-4)+") · 이 기기에만" : "열쇠 없음 — 질문 글 복사 · 답 붙여넣기로 돌아요 (이게 기본)"; $("modelIn").value = D.settings.model; $("testIn").checked = D.settings.test; $("hgtIn").value = D.settings.height || "";
   $("verLine").innerHTML = `${VER} · 만든 날 ${MADE} · 고친 날 ${FIXED} · 57번 폴더 · index.html<table>${CHANGES.map(c=>`<tr><td>${c[0]}</td><td>${c[1]}</td><td>${c[2]}</td></tr>`).join("")}</table>`; $("setModal").classList.add("on"); }
 function saveKey(){ const k = $("keyIn").value.trim(); if(!k) return toast("열쇠를 넣어요"); D.settings.key = k; save(); openSet(); drawTop(); toast("열쇠를 이 기기에 저장했어요"); }
 function clearKey(){ D.settings.key = ""; save(); openSet(); drawTop(); toast("열쇠를 지웠어요"); }
 $("modelIn").onchange = e => { D.settings.model = e.target.value; save(); };
 $("testIn").onchange = e => { D.settings.test = e.target.checked; save(); drawTop(); };
+$("hgtIn").onchange = e => { const v = +e.target.value; D.settings.height = v >= 120 && v <= 200 ? v : 0; e.target.value = D.settings.height || ""; save(); toast(D.settings.height ? "키 " + D.settings.height + " cm 로 재요" : "키는 아바타 값으로 재요"); };   // v1.1 D
 $("nickIn").oninput = e => { D.settings.nick = e.target.value.trim() || "나"; save(); $("nick").textContent = D.settings.nick; };
 $("symText").oninput = e => { cur.text = e.target.value; };
 

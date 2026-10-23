@@ -81,6 +81,7 @@ button{font:inherit;cursor:pointer}
 .b.sel{background:var(--blue);color:#fff}
 .b.mint{background:var(--mint2);color:#0f6f63}.b.mint.sel{background:var(--mint);color:#fff}
 .b.dim{background:#eef0f3;color:#8a929c}
+.b.dim.sel{background:var(--blue);color:#fff}   /* v1.2 — .b.dim 이 .b.sel 뒤에 있어 고른 칩이 안 보이던 것 (v1.1 「전에 다친 적」 도) */
 .b.sm{font-size:14px;padding:5px 10px}
 .chiprow{display:flex;gap:6px;align-items:flex-start;margin:1px 0}
 .chiprow .cl{flex:0 0 72px;font:14px "Jua";color:var(--sub);padding-top:9px;white-space:nowrap}
@@ -96,7 +97,7 @@ button{font:inherit;cursor:pointer}
 .hint{font-size:13.5px;color:var(--sub)}
 .now1{background:#fff8e1;border:1px solid #ffe08a;border-radius:10px;padding:6px 10px;font:15px/1.4 "Jua";color:#6b4e00}
 .now1 b{color:#1f2630}
-#ansIn.bad{outline:3px solid #d93025}
+#ansIn.bad,#selIn.bad{outline:3px solid #d93025}
 .bub{max-width:95%;padding:9px 13px;border-radius:16px;font:16px/1.4 "Noto Sans KR";margin:3px 0}
 .bub.ai{background:#eef1f5;border-bottom-left-radius:4px}
 .bub.me{background:var(--blue);color:#fff;margin-left:auto;border-bottom-right-radius:4px}
@@ -117,10 +118,15 @@ textarea{resize:vertical;min-height:54px}
 .light b{font:22px "Jua"}
 .light.big .dots i{width:40px;height:40px}.light.big b{font:30px "Jua"}
 .c-초록{background:var(--gbg);border-color:#b7e0c6}.c-노랑{background:var(--ybg);border-color:#efd27a}.c-빨강{background:var(--rbg);border-color:#f1b2ab}
-.time{display:flex;margin:2px 0}
+.time{display:flex;margin:2px 0;position:relative;touch-action:none;user-select:none}
+.time:before{content:"";position:absolute;top:8px;height:4px;left:calc(100% / 12);right:calc(100% / 12);background:#d3dae3}
+.time .tlf{position:absolute;top:8px;height:4px;left:calc(100% / 12);width:calc((100% - 100% / 6) * var(--f, 0));background:var(--blue);transition:width .25s}
+.time.drag .tlf{transition:none}
+.time i.lvd,.tlnow i.lvd{display:block;width:9px;height:9px;border-radius:50%;margin:3px auto 0}
+.tlnow{display:flex;align-items:center;gap:6px;margin-top:6px;font:15px "Jua";color:var(--ink)}.tlnow i.lvd{display:inline-block;margin:0;flex:0 0 auto}
 .time div{flex:1;text-align:center;font:15px "Jua";color:var(--sub);position:relative;padding-top:20px;cursor:pointer}
-.time div:before{content:"";position:absolute;left:0;right:0;top:8px;height:4px;background:#d3dae3}
-.time div:after{content:"";position:absolute;left:50%;top:2px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#d3dae3}
+.time div:before{display:none}
+.time div:after{content:"";position:absolute;left:50%;top:2px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#d3dae3;z-index:1}
 .time div.on{color:var(--ink)}
 .time div.on:after{background:var(--blue);box-shadow:0 0 0 4px #c9d7f5}
 .time div.done:before,.time div.done:after{background:var(--blue)}
@@ -356,6 +362,7 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
         <button class="b sm" id="frontBtn" onclick="setView('front')">앞</button><button class="b sm" id="backBtn" onclick="setView('back')">뒤</button>
         <span class="hint">등 · 허리 · 엉덩이는 「뒤」 에서</span>
       </div>
+      <div class="card" id="moreCard"></div>
       <div class="stick"><div class="row" id="nextSpotRow" style="display:none"><button class="big mint" style="margin:0;flex:1" onclick="doneSpot()">✔ 이 곳 다 적었어요 — 저장</button></div>
       <button class="big" id="toTeacher" style="margin:0" onclick="askTeacher()">👩‍⚕️ 선생님에게 보여 주기</button></div>
     </div>
@@ -383,15 +390,17 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
     <div class="wall">
       <div class="panel">
         <h3>📌 사례 카드 <span class="hint">이름 · 학번 · 학교 없이 번호만 · 카드를 누르면 아래에</span></h3>
-        <div class="now1" style="margin-bottom:8px">👉 지금 할 일 — 카드를 눌러 실제 결과를 적어요 · 점수는 사람이 매겨요 → 오른쪽 📋 표 복사</div>
+        <div class="now1" style="margin-bottom:8px">👉 지금 할 일 — 카드를 눌러 실제로 얼마나 급했나 · 언제 나았나를 골라요 · 점수는 사람이 골라요 → 오른쪽 📋 표 복사</div>
         <div class="posters" id="posters"></div>
         <div id="caseDetail"></div>
       </div>
       <div class="panel" style="display:flex;flex-direction:column">
         <h3>📊 성적표 <span class="hint">보고서 표로 바로 복사 · 점수는 사람이</span></h3>
         <div id="report"></div>
+        <div id="aiSel"></div>
         <div class="row" style="margin-top:auto;padding-top:10px">
           <button class="big sub" style="margin:0;flex:1" onclick="copyTable()">📋 표 복사</button>
+          <button class="big sub" style="margin:0;flex:1" onclick="copySummary()">📋 요약 표</button>
           <button class="big sub" style="margin:0;flex:1" onclick="exportJson()">💾 파일로 저장</button>
         </div>
         <div class="hint" style="text-align:right;margin-top:6px" id="sig"></div>
@@ -435,8 +444,8 @@ svg .anim-teacher.talk{animation:nod .55s ease-in-out 3}
 
 <script>
 /* ===== [3] JS 자료 ===== */
-const VER="v1.1", MADE = "2026-10-21 17:10", FIXED="2026-10-22 16:40";
-const CHANGES = [["v1.1","2026-10-22","부원 시험 녹음 «있으면 좋음» 넷 — D ⚙ 설정 「내 키 (cm)」(있으면 키 재기가 그 값) · E ② 「전에 다친 적」 칩 → 질문 글에 한 줄 · F 손에 든 소품 이름표(청진기 · 비접촉 체온계 · 물컵 · 얼음주머니 · 밴드) · ④ 얼음 이름표 · G ④ 결과 신호등 크게"],["v1.0","2026-10-22","부원 시험 녹음(10-22) 진짜 셋 — A 질문 글을 답 칸에 붙여 넣으면 「한 문장」 이 경과로 뜨던 것 → 틀 글자는 비우고 「이건 질문 글이에요」 알림 · B 시험 답을 GPT 답으로 알던 것 → ④ 결과 맨 위 「시험 답 — 연습용 · 진짜 AI 아님」 띠 · 단추는 아래 작게 · 심한 신호가 겹치면 3일 뒤 「아직 많이 아파요」 · 색 한 칸 위 · C 「뭐 어떡하라는 거지」 → 판마다 「👉 지금 할 일」 한 줄 · 다음 단추 글 「👉 여기 눌러요 — ○○」"],["v0.9","2026-10-22","따라 하기 — 35번 바질 것처럼 화면 위 실제 자리를 밝히고(노란 테두리) 글 상자로 설명 · ① 보건실 → ② 디지털 트윈 → ⑤ 탐구 벽을 넘기며 열한 걸음 · 🔊 읽어 주기 · 처음 안내 다섯 장 끝 「화면에서 따라 하기」 · ① «어떻게 쓰나요» 카드 단추 · 폰에선 글 상자가 밝힌 곳 반대쪽에 가로로"],["v0.8","2026-10-22","사물 자리를 리그 뼈대 기준으로 — 청진기 · 체온계 · 물컵 · 얼음 · 밴드는 손에 쥐고(손 끝 좌표) · 키 자는 오른쪽 벽 바닥부터 등 대고 · 시력표는 창문 아래 벽(왼쪽 보며 한 눈 가림) · 세면대는 허리 높이 · ④ 앞날 예측 : 아픈 정도가 크면 벤치에 앉아 다친 발을 받침에 올리고 쉼(병이면 웅크림) → 나아지며 절뚝 걷기 → 걷기 → 달리기로 이어서 바뀜 (전무님 «상태에 따라 동작이 달라져야»)"],["v0.7","2026-10-22","캐릭터 동작을 관절 리그로(전무님 «얼굴은 아동틱 OK · 동작은 정교하게» · 시안 나 · 게임 문법) — 목 · 어깨 · 팔꿈치 · 엉덩이 · 무릎이 시간에 따라 움직임 · 숨쉬기 · 깜빡임 · 머리카락 뒤처짐 · 통통 · 흔들기 · 이모지 스티커 없앰 · ① 보건실 : 걸어가기 · 선생님이 무릎 굽혀 앉아 손을 뻗어 살핌 · 내 반응(움찔 · 추워함 · 기쁨 · 찡그림)을 예비 → 본 → 돌아옴 동작으로 · ③ 선생님 쓰기 · 말할 때 끄덕 · ④ 앞날 예측 : 그림 셋 교체 → 큰 아바타 하나가 걸으며 붓기 · 절뚝 · 속도 · 얼음 → 붕대가 이어서 변함 · 회복 % 막대 · 처음엔 당겨 보다 멀어짐"],["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 사람처럼 눌러 본 뒤(06:30) — ② 「✔ 저장」 단추 · ④ 아래 줄이 옆 판 바닥에 붙박이(스크롤 없이 보임) · 사례 저장 뒤 단추가 「⑤ 탐구 벽 보기」 로 · 붙여 넣기 안내에 1달 · 3달 · 폰 세로에서 위 띠가 옆으로 넘쳐 화면이 줄어 보이던 것 → 띠 두 줄로 · 아래 띠 글자가 두 줄로 꺾이던 것 → 한 줄 · 폰에선 사례 · 점수 알약 숨김 · 안내 셋째 장에 1달 · 3달 · ⑤ 탐구 벽이 폰에선 작은 판 둘 → 세로 한 줄로 길게 · 위 띠 세 줄 → 두 줄 · 성적표 표는 옆으로 밀어 봄 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
+const VER="v1.2", MADE = "2026-10-21 17:10", FIXED="2026-10-23 09:31";
+const CHANGES = [["v1.2","2026-10-23","전무님 지적 일곱 — ⑥ 사례 모으기 : 불러올 때 새 번호 · 누구(별명) · 같은 사례만 건너뜀 · ⑧ 사례 카드 · 성적표 : 실제로 얼마나 급했나 · 언제 나았나를 고르면 AI 와 저절로 견줌(맞음 · 과함 · 가볍게 봄) · 점수는 고르기 · 세 AI 맞힘 % · 📋 요약 표 · ⑦ 진짜/연습 · ⚠ 확인 필요 딱지 · 성적표에서 빼기 + 까닭 · 🤖 AI 선별 · ① 몸 안 → 누른 부위로 옮김 · ⑤ 시간 줄 한 줄로 이어 채움 · 칸마다 그날 상태 점 · 끌면 칸 사이도 이어서 · ②③ 「3 더 자세히」 어디쯤(얼굴 이마 · 눈 · 코 · 입 · 귀 · 볼 · 턱 · 이) · 얼마나 1~10 · 느낌 · 언제 → 질문 글에 · ④ 아픈 정도에 따라 표정 · 낯빛 · 아픈 곳 손으로 감쌈 · 얼굴 붉은 덮개 · 턱 밑 띠 고침"],["v1.1","2026-10-22","부원 시험 녹음 «있으면 좋음» 넷 — D ⚙ 설정 「내 키 (cm)」(있으면 키 재기가 그 값) · E ② 「전에 다친 적」 칩 → 질문 글에 한 줄 · F 손에 든 소품 이름표(청진기 · 비접촉 체온계 · 물컵 · 얼음주머니 · 밴드) · ④ 얼음 이름표 · G ④ 결과 신호등 크게"],["v1.0","2026-10-22","부원 시험 녹음(10-22) 진짜 셋 — A 질문 글을 답 칸에 붙여 넣으면 「한 문장」 이 경과로 뜨던 것 → 틀 글자는 비우고 「이건 질문 글이에요」 알림 · B 시험 답을 GPT 답으로 알던 것 → ④ 결과 맨 위 「시험 답 — 연습용 · 진짜 AI 아님」 띠 · 단추는 아래 작게 · 심한 신호가 겹치면 3일 뒤 「아직 많이 아파요」 · 색 한 칸 위 · C 「뭐 어떡하라는 거지」 → 판마다 「👉 지금 할 일」 한 줄 · 다음 단추 글 「👉 여기 눌러요 — ○○」"],["v0.9","2026-10-22","따라 하기 — 35번 바질 것처럼 화면 위 실제 자리를 밝히고(노란 테두리) 글 상자로 설명 · ① 보건실 → ② 디지털 트윈 → ⑤ 탐구 벽을 넘기며 열한 걸음 · 🔊 읽어 주기 · 처음 안내 다섯 장 끝 「화면에서 따라 하기」 · ① «어떻게 쓰나요» 카드 단추 · 폰에선 글 상자가 밝힌 곳 반대쪽에 가로로"],["v0.8","2026-10-22","사물 자리를 리그 뼈대 기준으로 — 청진기 · 체온계 · 물컵 · 얼음 · 밴드는 손에 쥐고(손 끝 좌표) · 키 자는 오른쪽 벽 바닥부터 등 대고 · 시력표는 창문 아래 벽(왼쪽 보며 한 눈 가림) · 세면대는 허리 높이 · ④ 앞날 예측 : 아픈 정도가 크면 벤치에 앉아 다친 발을 받침에 올리고 쉼(병이면 웅크림) → 나아지며 절뚝 걷기 → 걷기 → 달리기로 이어서 바뀜 (전무님 «상태에 따라 동작이 달라져야»)"],["v0.7","2026-10-22","캐릭터 동작을 관절 리그로(전무님 «얼굴은 아동틱 OK · 동작은 정교하게» · 시안 나 · 게임 문법) — 목 · 어깨 · 팔꿈치 · 엉덩이 · 무릎이 시간에 따라 움직임 · 숨쉬기 · 깜빡임 · 머리카락 뒤처짐 · 통통 · 흔들기 · 이모지 스티커 없앰 · ① 보건실 : 걸어가기 · 선생님이 무릎 굽혀 앉아 손을 뻗어 살핌 · 내 반응(움찔 · 추워함 · 기쁨 · 찡그림)을 예비 → 본 → 돌아옴 동작으로 · ③ 선생님 쓰기 · 말할 때 끄덕 · ④ 앞날 예측 : 그림 셋 교체 → 큰 아바타 하나가 걸으며 붓기 · 절뚝 · 속도 · 얼음 → 붕대가 이어서 변함 · 회복 % 막대 · 처음엔 당겨 보다 멀어짐"],["v0.6","2026-10-21","되묻기 질문을 상황별 모음에서 골라 매번 다르게(안전 질문 먼저 · 지난번과 안 겹침) · 낱말 「몸 쌍둥이」→「디지털 트윈」 · 앞날 예측 다양화(시험 답 열여섯 갈래 · 단계마다 배경 보건실→집→교실→운동장 · 얼음 · 목발 · 체온계 · 공 소품 · 말풍선 · 단계별 할 것) · 위 띠에 「🔄 처음부터」 · 별명 기본 「나」(처음 한 번 안내) · 보건실 동작 실감(하는 중 2초 움직임 · 소리 · 체온 · 키 숫자 올라감 · 결과 말이 아픈 곳 · 어떻게에 따라 · 내 아바타 반응 · 끝나면 제자리 · 잰 것이 사례 exam 으로 되묻기 · 질문 글에) · 「처음부터」 는 ① 보건실로 · 처음 쓰는 친구 안내(환영 다섯 장 · 위 띠 ❓ · 판마다 말풍선은 뺌) · 선생님 되묻기 넷을 하나씩(걱정되는 답이면 「어른께 말했나요」 · 「하나 더」 단추) · 애니메이션(걸을 때 발걸음 · 눈 깜빡임 · 선생님 말할 때 고개 · 새로 열린 단계 단추 통통) · 작은 트윈 상자 사파리 기준점 · 앞날 예측에 1달 · 3달(AI 답에 없으면 색에 따른 기본 글) · 사람처럼 눌러 본 뒤(06:30) — ② 「✔ 저장」 단추 · ④ 아래 줄이 옆 판 바닥에 붙박이(스크롤 없이 보임) · 사례 저장 뒤 단추가 「⑤ 탐구 벽 보기」 로 · 붙여 넣기 안내에 1달 · 3달 · 폰 세로에서 위 띠가 옆으로 넘쳐 화면이 줄어 보이던 것 → 띠 두 줄로 · 아래 띠 글자가 두 줄로 꺾이던 것 → 한 줄 · 폰에선 사례 · 점수 알약 숨김 · 안내 셋째 장에 1달 · 3달 · ⑤ 탐구 벽이 폰에선 작은 판 둘 → 세로 한 줄로 길게 · 위 띠 세 줄 → 두 줄 · 성적표 표는 옆으로 밀어 봄 · 아이패드 가로에서 아래 단계 띠 얇게 · 아이패드 낮은 화면 맞춤 · 아바타 다양화(머리 아홉 · 옷 넷 · 소품 다섯 · 눈 · 신발 · 아래 색 · 🎲) · 보건실 동작 아홉(침대 · 청진기 · 체온 · 밴드 · 얼음 · 물 · 시력 · 키 · 손 씻기) · 단계 차례 잠금 🔒 · 판 번호 띠에 · 쌍둥이 머리 겹침 그림 고침 · 부위 「✔ 저장」 단추 · 보건실 그림 63% · 🔊 읽어 주기 + 효과음(35번 바질에서) · 선생님 판 말풍선 · 아픈 점이 부위 자리에 · 처음부터 다시 단추 · 앞날 예측 그림이 단계마다 달라짐(점 · 붕대 · 표정 · 한 줄 말) · 부위 하나씩 차례로 — 누른 곳마다 어떻게 · 언제 · 상태 묶음(spots) · 채운 뒤 다음 곳 · 이름 누르면 고침 · ✕ 로 빼기 · 질문 글이 부위별 줄 · 미리 보기 단추 (전무님 9시 전 말씀)"],["v0.5","2026-10-21","AI 길 바꿈(전무님 «무료 AI · GPT 익숙») — 되묻기는 앱 규칙 · 앞날 예측은 질문 글 복사 → 아무 AI(GPT · 제미나이 · 클로드)에 묻기 → 답 붙여 넣으면 읽어서 쌍둥이에 · 세 AI 칸에 클로드 · 열쇠는 있을 때만 「바로 묻기」 · 아이패드 사파리 맞춤(홈 화면 앱 · 터치 · 같은 Wi-Fi 로 열기 2_아이패드로_열기.bat) · 「어떻게 아픈가요」 칩이 누른 부위에 맞춰 바뀜 · 누른 부위 ✕ 로 빼기 · 모두 지우기"],["v0.4","2026-10-21","캐릭터 — 전무님이 고른 시안 3(여) · 9(남) 느낌으로 아바타 · 선생님 · 몸 쌍둥이 다시 그림(큰 머리 · 큰 눈 · 볼터치 · 교복) · 옷 색 파스텔 · 책상 앞판"],["v0.3","2026-10-21","전무님 써 보고 — 칩 네 줄(다침 · 몸 아픔 · 언제 · 상태 · 실제 보건실 사유) · 아픈 곳 셋까지 · 침대 누르면 눕고 선생님 진찰 · 「나」 꾸미기(성별 · 머리 · 색 · 안경) · 고등학생 말투 · 팔 자리 함정 고침"],["v0.2","2026-10-21","움직임 — 아바타 걸어 들어옴 · 선생님 끄덕 · 쌍둥이 숨쉼 · 아픈 곳 깜빡 · 저장 때 색종이 · 폰 띠 두 줄"],["v0.1","2026-10-21","첫 판 — 목업 v3 그대로 · 시험 답 · 클로드 API · 사례 · 성적표"]];
 const KEY = "clinic57";
 // 칩 — 실제 보건실 방문 사유 낱말 (전무님 10-21 «실사용 용어») · 저장 칸은 그대로 how[] (다침 + 몸 아픔) · since[] (언제 + 상태)
 const HOW_BASE = ["삠","부딪힘","베임","넘어짐","찔림","데임","벌레 물림"];   // 부위를 안 눌렀을 때
@@ -476,10 +485,36 @@ function load(){
   d.settings.say = d.settings.say !== false;   // 🔊 읽어 주기 + 효과음 (v0.6 · 35번에서)
   d.cases.forEach(c => { if(!c.spots){ const ps = c.parts && c.parts.length ? c.parts : (c.part ? [c.part] : []); c.spots = ps.map((p,i)=>({part:p, how:i?[]:(c.how||[]).slice(), since:i?[]:(c.since||[]).slice()})); if(!ps.length && (c.how||[]).length) c.spots = [{part:"", how:c.how.slice(), since:(c.since||[]).slice()}]; } });   // v0.6 — 옛 사례는 첫 부위에 묶어 보충
   d.cases.forEach(c => { c.three = c.three || {}; ["gpt","gemini","claude"].forEach(k => c.three[k] = c.three[k] || {color:"", diag:""}); });   // v0.5 — 세 AI 칸에 클로드
+  d.cases.forEach(c => fixCase(c, d.settings.nick));   // v1.2 — 누구 · 진짜/연습 · 빼기 · 실제 긴급 · 나은 때 칸 보충
   return d;
 }
 function save(){ try{ localStorage.setItem(KEY, JSON.stringify(D)); }catch(e){ toast("저장 못 함 — 브라우저 저장 공간을 확인해요"); } }
-function newCase(){ return {id:0, made:"", part:"", parts:[], spots:[], exam:{}, side:"", how:[], since:[], text:"", hist:"", qa:[], ai:null, real:{diag:"",hospital:"",treat:"",healed:""}, three:{gpt:{color:"",diag:""},gemini:{color:"",diag:""},claude:{color:"",diag:""}}, score:{diag:"",urgent:"",care:""}, wrong:"(없음)", memo:"", ver:VER}; }
+function fixCase(c, nick){   // v1.2 — 옛 사례 · 불러온 사례에 새 칸 보충
+  c.real = Object.assign({diag:"",hospital:"",treat:"",healed:"",urgent:"",heal:""}, c.real || {});
+  c.kind = c.kind || (c.ai && c.ai.model === "시험 답" ? "연습" : "진짜"); c.out = c.out || {on:false, why:""};
+  c.who = c.who || nick || ""; c.score = c.score || {diag:"",urgent:"",care:""}; return c;
+}
+const URG = ["보건실에서 끝남","며칠 안 병원","그날 병원","응급"], URG_C = {"보건실에서 끝남":"초록","며칠 안 병원":"노랑","그날 병원":"빨강","응급":"빨강"};   // v1.2 ⑧ 실제 긴급도
+const HEAL = ["3일 안","1주","2주","1달","3달","아직 안 나음"], HEAL_K = ["d3","w1","w2","m1","m3","later"];   // 실제 나은 때 ↔ 시간 줄 칸
+const OUTWHY = ["장난","연습","겹침","기타"];
+function realColor(c){ return URG_C[(c.real||{}).urgent] || ""; }
+function cmpColor(ai, real){ if(!ai || !real) return ""; const o = COLORS.indexOf(ai) - COLORS.indexOf(real); return o === 0 ? "맞음" : o > 0 ? "과함" : "가볍게 봄"; }
+function aiHeal(c){ const t = (c.ai && c.ai.timeline) || {}; return ["d3","w1","w2","m1","m3"].find(k => /다 나|거의 나|나았|나아요|괜찮|회복|평소/.test(t[k] || "")) || "later"; }
+function healCmp(c){ if(!c.real.heal) return ""; const ri = HEAL.indexOf(c.real.heal), ai = HEAL_K.indexOf(aiHeal(c)); return ri === ai ? "맞음" : ai < ri ? "AI 가 빨리 봄" : "AI 가 늦게 봄"; }
+function counted(c){ return c.kind !== "연습" && !(c.out && c.out.on); }   // 성적표에 넣는 사례
+function hasReal(c){ return !!(c.real.urgent || c.real.diag); }
+function daysSince(c){ return c.made ? Math.floor((Date.now() - new Date(c.made)) / 864e5) : 0; }
+function suspect(c){   // ⑦ «확인 필요» 까닭 — 지우지 않고 딱지만
+  const r = [], n = (c.spots || []).reduce((a, x) => a + x.how.length + x.since.length, 0);
+  if(!String(c.text || "").trim()) r.push("학생 말 빔");
+  if(n <= 1) r.push("칩 " + n + "개");
+  if(!(c.qa || []).length || c.qa.some(x => !x.a)) r.push("되묻기 건너뜀");
+  if(c.secs && c.secs < 30) r.push(c.secs + "초 만에 저장");
+  if((c.spots || []).some(x => x.part && !/배|옆구리|허리/.test(x.part) && x.how.some(h => ["복통","생리통","체함","설사"].includes(h)))) r.push("부위와 안 맞는 칩");
+  if(c.aiFlag && c.aiFlag.v === "의심") r.push("AI 의심 — " + c.aiFlag.why);
+  return r;
+}
+function newCase(){ return {id:0, made:"", part:"", parts:[], spots:[], exam:{}, side:"", how:[], since:[], text:"", hist:"", qa:[], ai:null, real:{diag:"",hospital:"",treat:"",healed:"",urgent:"",heal:""}, who:"", kind:"", out:{on:false,why:""}, secs:0, t0:0, aiFlag:null, three:{gpt:{color:"",diag:""},gemini:{color:"",diag:""},claude:{color:"",diag:""}}, score:{diag:"",urgent:"",care:""}, wrong:"(없음)", memo:"", ver:VER}; }
 function isTest(){ return D.settings.test || location.search.includes("test"); }   // v0.5 — 열쇠가 없어도 시험 답이 아님(복사 · 붙여넣기가 기본)
 function hasKey(){ return !!D.settings.key; }
 function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("on"); clearTimeout(e._t); e._t = setTimeout(()=>e.classList.remove("on"), 2200); }
@@ -761,12 +796,14 @@ const fn = (v, c) => typeof v === "function" ? v(c) : v;
 const LINE = "#4e3b30";
 const OUT = `stroke="${LINE}" stroke-width="2" stroke-linejoin="round"`;
 // 얼굴 — 귀 · 머리통 · 볼터치 · 눈 · 입 (girl 이면 파란 눈동자 큰 눈 · 아니면 까만 눈)
-function faceSvg(S, girl, ears, iris, bl){
+function faceSvg(S, girl, ears, iris, bl, ac, fl){   // v1.2 ④ ac 아픔 0~1(눈썹 안쪽 올라감 · 입 내려감 · 눈 찡그림) · fl 열(볼 붉음)
+  ac = ac || 0; fl = fl || 0; const f1 = v => (+v).toFixed(1);
+  const brow = (w, b) => `<path d="M-19 ${f1(-1 + b + 2 * ac)} q7 ${f1(-4 + 3 * ac)} 13 ${f1(-1 - 7 * ac)} M6 ${f1(-2 + b - 5 * ac)} q6 ${f1(-3 + 3 * ac)} 13 ${f1(1 + 7 * ac)}" stroke="${LINE}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`;
   const eyes = bl ? `<path d="M-17 9 q5 3 10 0 M7 9 q5 3 10 0" stroke="${LINE}" stroke-width="2.2" fill="none" stroke-linecap="round"/>` : girl
-    ? `<ellipse cx="-12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><ellipse cx="12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><circle cx="-12" cy="9" r="4.2" fill="${iris}"/><circle cx="12" cy="9" r="4.2" fill="${iris}"/><circle cx="-12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="-13.5" cy="6" r="1.7" fill="#fff"/><circle cx="10.5" cy="6" r="1.7" fill="#fff"/><path d="M-19 -1 q7 -4 13 -1 M6 -2 q6 -3 13 1" stroke="${LINE}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M-18.5 3 l-2.5 -2 M-14 1.2 l-1 -2.6 M18.5 3 l2.5 -2 M14 1.2 l1 -2.6" stroke="${LINE}" stroke-width="1.4" stroke-linecap="round"/>`
-    : `<ellipse cx="-12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><ellipse cx="12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><circle cx="-12" cy="9" r="2" fill="#1a1a1a"/><circle cx="12" cy="9" r="2" fill="#1a1a1a"/><circle cx="-13" cy="6.5" r="1.3" fill="#fff"/><circle cx="11" cy="6.5" r="1.3" fill="#fff"/><path d="M-19 -2 q7 -4 13 -1 M6 -3 q6 -3 13 1" stroke="${LINE}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+    ? `<ellipse cx="-12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><ellipse cx="12" cy="8" rx="5.5" ry="7" fill="#fff" ${OUT}/><circle cx="-12" cy="9" r="4.2" fill="${iris}"/><circle cx="12" cy="9" r="4.2" fill="${iris}"/><circle cx="-12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="12" cy="10" r="2.2" fill="#1a2a44"/><circle cx="-13.5" cy="6" r="1.7" fill="#fff"/><circle cx="10.5" cy="6" r="1.7" fill="#fff"/>${brow(2, 0)}<path d="M-18.5 3 l-2.5 -2 M-14 1.2 l-1 -2.6 M18.5 3 l2.5 -2 M14 1.2 l1 -2.6" stroke="${LINE}" stroke-width="1.4" stroke-linecap="round"/>`
+    : `<ellipse cx="-12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><ellipse cx="12" cy="8" rx="3.8" ry="4.8" fill="${iris}"/><circle cx="-12" cy="9" r="2" fill="#1a1a1a"/><circle cx="12" cy="9" r="2" fill="#1a1a1a"/><circle cx="-13" cy="6.5" r="1.3" fill="#fff"/><circle cx="11" cy="6.5" r="1.3" fill="#fff"/>${brow(2.4, -1)}`;
   return (ears ? `<circle cx="-33" cy="8" r="6" fill="${S}" ${OUT}/><circle cx="33" cy="8" r="6" fill="${S}" ${OUT}/>` : "")
-    + `<ellipse cx="0" cy="2" rx="34" ry="33" fill="${S}" ${OUT}/><ellipse cx="-21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><ellipse cx="21" cy="16" rx="5.5" ry="3.2" fill="#ffb0b0" opacity=".65"/><g class="eyes" style="animation-delay:${(-Math.random()*4).toFixed(1)}s">${eyes}</g><path d="M-6 19 Q0 27 6 19 Z" fill="#fff" stroke="#b05050" stroke-width="1.8" stroke-linejoin="round"/>`;
+    + `<ellipse cx="0" cy="2" rx="34" ry="33" fill="${S}" ${OUT}/>${[-21, 21].map(x => `<ellipse cx="${x}" cy="16" rx="${f1(5.5 + 3.5 * fl)}" ry="${f1(3.2 + 1.6 * fl)}" fill="${fl > .1 ? "#ff8f8f" : "#ffb0b0"}" opacity="${(.65 + .3 * fl).toFixed(2)}"/>`).join("")}<g class="eyes" style="animation-delay:${(-Math.random()*4).toFixed(1)}s">${eyes}</g>${ac > .55 ? [-12, 12].map(x => `<path d="M${x - 7} ${f1(1 + 8 * (ac - .55))} Q${x} ${f1(-1 + 6 * (ac - .55))} ${x + 7} ${f1(1 + 8 * (ac - .55))}" stroke="${LINE}" stroke-width="2" fill="none" stroke-linecap="round"/>`).join("") : ""}<path d="M-6 ${f1(19 + 2 * ac)} Q0 ${f1(27 - 13 * ac)} 6 ${f1(19 + 2 * ac)}${ac < .35 ? " Z" : ""}" fill="${ac < .35 ? "#fff" : "none"}" stroke="#b05050" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>`;
 }
 // 머리 모양 아홉 — 뒤판 · 앞머리 · 귀 보임 (v0.6)
 const HAIRS = [["long","긴 머리"],["bob","단발"],["tied","묶음"],["twin","양갈래"],["pony","포니"],["curly","곱슬"],["short","짧은"],["spiky","뾰족"],["mush","바가지"]];
@@ -900,7 +937,7 @@ let rsT = 0; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = 
 const TAU = Math.PI * 2, clampN = (x, a, b) => Math.max(a, Math.min(b, x)), lerpN = (a, b, t) => a + (b - a) * t;
 const EZ = {back: t => { const c = 1.4; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }, sine: t => .5 - .5 * Math.cos(Math.PI * t), out: t => 1 - Math.pow(1 - t, 3)};
 const segN = (t, a, b, fn) => (fn || EZ.back)(clampN((t - a) / (b - a), 0, 1));   // t 가 a~b 사이면 0→1 (기본 : 살짝 넘쳤다 돌아오는 back 곡선)
-const POSE0 = () => ({x:0, y:0, face:1, lean:0, head:0, breath:0, hair:0, blink:false, aL:[-4,8], aR:[-4,8], lL:[0,0], lR:[0,0], inj:-1, swell:0, painSeg:"", wrap:"", pain:null, painLv:0, steth:false});
+const POSE0 = () => ({x:0, y:0, face:1, lean:0, head:0, breath:0, hair:0, blink:false, aL:[-4,8], aR:[-4,8], lL:[0,0], lR:[0,0], inj:-1, swell:0, painSeg:"", wrap:"", pain:null, painLv:0, steth:false, ache:0, flush:0, pale:0, headPain:null, headLv:0});
 function limbSvg(x, y, a1, L1, a2, L2, w, c1, c2, end, mid){   // 두 마디(허벅지+정강이 · 위팔+아래팔) · end 는 끝마디 안에 · mid 는 첫마디 끝
   return `<g transform="translate(${x},${y}) rotate(${(-a1).toFixed(2)})"><rect x="${-w/2}" y="-3" width="${w}" height="${L1+6}" rx="${w/2}" fill="${c1}" ${OUT}/><g transform="translate(0,${L1}) rotate(${a2.toFixed(2)})">${mid||""}<rect x="${-w/2}" y="-3" width="${w}" height="${L2+6}" rx="${w/2}" fill="${c2}" ${OUT}/>${end||""}</g></g>`;
 }
@@ -930,7 +967,7 @@ function rigSvg(k, p){
   const hr = nurse ? null : hairSvg(a, H);
   const hairBack = nurse ? "" : `<g transform="rotate(${p.hair.toFixed(2)})">${hr.back}</g>`;
   const hairFront = nurse ? `<circle cx="0" cy="-34" r="12" fill="${H}" ${OUT}/><path d="M-34 2 Q-36 -42 0 -42 Q36 -42 34 2 Q28 -24 4 -22 Q0 -14 -4 -22 Q-28 -24 -34 2 Z" fill="${H}" ${OUT}/>` : hr.front + accSvg(a);
-  const head = `<g transform="translate(0,-66) rotate(${p.head.toFixed(2)}) translate(0,-24) scale(.62)">${hairBack}${faceSvg(S, girl, nurse ? true : hr.ears, nurse ? "#6b4a2e" : (a.eyec || "#3b7dd8"), p.blink)}${hairFront}</g>`;
+  const head = `<g transform="translate(0,-66) rotate(${p.head.toFixed(2)}) translate(0,-24) scale(.62)">${hairBack}${faceSvg(p.pale ? mixHex(S, "#dfe8d6", p.pale * .6) : S, girl, nurse ? true : hr.ears, nurse ? "#6b4a2e" : (a.eyec || "#3b7dd8"), p.blink, p.ache, p.flush)}${hairFront}${p.headPain ? glow(p.headPain[0], p.headPain[1], p.headLv, 7) : ""}</g>`;
   const neck = `<rect x="-5" y="-72" width="10" height="14" fill="${S}"/>`;
   return `<g transform="translate(${p.x.toFixed(1)},${p.y.toFixed(1)}) scale(${p.face},1)">${leg(false)}<g transform="rotate(${p.lean.toFixed(2)})">${arm(false)}<g transform="scale(1,${br.toFixed(4)})">${neck}${torso}</g>${head}${p.pain ? glow(p.pain[0], p.pain[1], p.painLv, 12) : ""}${arm(true)}</g>${leg(true)}</g>`;
 }
@@ -950,9 +987,23 @@ function reachTo(p, tgt, side){
 function painOnRig(part){
   const n = part || "", L = /왼쪽/.test(n) ? -1 : 1;
   if(/발|종아리|정강이|뒤꿈치/.test(n)) return {inj:L, seg:"foot"}; if(/무릎|허벅지/.test(n)) return {inj:L, seg:"knee"};
-  const pt = mePt(n); return {pt:[pt[0] * .85, pt[1] - 63]};
+  if(/머리|얼굴|뒤통수|이마/.test(n)) return {pt:[0, -86]}; const pt = mePt(n); return {pt:[pt[0] * (/팔|손/.test(n) ? .68 : .85), pt[1] * .92 - 95]};   // v1.2 ④ 디지털 트윈 좌표 → 리그 몸통 (어깨 -60 · 가슴 -43 · 배 -18) — v1.1 까지 아래로 밀려 배가 치마 · 얼굴이 턱 밑에
 }
-function applyPain(p, part, lv, wrap){ const q = painOnRig(part); if(q.inj){ p.inj = q.inj; p.swell = lv; p.painSeg = q.seg; p.wrap = wrap || ""; } else { p.pain = q.pt; p.painLv = lv; } }
+const HEADPT = {이마:[0,-16], 눈:[-12,8], 코:[0,14], 입:[0,22], 귀:[-33,8], 볼:[-21,16], 턱:[0,31], 이:[6,22], 정수리:[0,-34], 옆머리:[-30,-10], 관자놀이:[-27,-4], 뒤통수:[0,-26], "머리 전체":[0,-20]};   // 머리 안 좌표 (v1.2 ④)
+function mixHex(a, b, t){ if(!/^#[0-9a-f]{6}$/i.test(a)) return a; const h = (s, i) => parseInt(s.slice(i, i + 2), 16); return "#" + [1, 3, 5].map(i => Math.round(h(a, i) + (h(b, i) - h(a, i)) * t).toString(16).padStart(2, "0")).join(""); }
+function holdPain(p, part, lv){   // v1.2 ④ 아픈 곳을 손으로 감싸고 몸을 숙임 — 아픈 정도에 따라 이어서 (다리는 붓기 · 절뚝이 이미 있음)
+  const sick = !part && cur.how.some(h => SICK.includes(h)), q = painOnRig(part || (sick ? (cur.how.includes("두통") ? "머리" : "배") : "")); if(q.inj || (!part && !sick)) return;
+  const k = segN(lv, .2, .75, EZ.sine), n = part || (cur.how.includes("두통") ? "머리" : "배"), head = /머리|얼굴|뒤통수|이마|목/.test(n), arm = /팔|손|어깨/.test(n);
+  if(/배|옆구리|가슴|허리/.test(n)) p.lean += 9 * k; if(head) p.head += 7 * k;
+  let side = q.pt[0] < 0 ? "L" : "R"; if(arm) side = side === "L" ? "R" : "L";
+  const sx = side === "L" ? -1 : 1, tx = head ? 27 : q.pt[0] * (arm ? 1 : .6), ty = head ? -76 : q.pt[1];   // 머리 · 얼굴은 볼을 감쌈 (가운데로 가면 팔이 얼굴을 가림)
+  const [a1, a2] = reachTo(p, rigWorld(p, lerpN(sx * 24, tx, k), lerpN(2, ty, k), true), side), key = side === "L" ? "aL" : "aR", m = Math.min(1, k * 4);   // 손이 늘어진 자리 → 아픈 곳으로 몸 앞을 따라 (관절 각을 섞으면 팔을 옆으로 휘저음)
+  p[key] = [lerpN(p[key][0], a1, m), lerpN(p[key][1], a2, m)];
+}
+function applyPain(p, part, lv, wrap){ const q = painOnRig(part);
+  const st = (cur.since || []).concat(cur.how || []).join(" "); p.ache = lv; p.flush = /열 남|감기/.test(st) ? lv : 0; p.pale = /어지러움|토할 것 같음|멀미|체함|복통/.test(st) ? lv : 0;   // v1.2 ④ 표정 · 낯빛
+  if(/머리|얼굴|뒤통수|이마/.test(part || "")){ const sp = (cur.spots || []).find(x => x.part === part) || {}; p.headPain = HEADPT[sp.where] || (/얼굴/.test(part) ? [0, 10] : /뒤통수/.test(part) ? [0, -26] : [0, -22]); p.headLv = lv; return; }   // 머리 · 얼굴은 머리 안 그 자리만 (v1.1 까지 몸 좌표에 그려 턱 밑에 붉은 띠)
+  if(q.inj){ p.inj = q.inj; p.swell = lv; p.painSeg = q.seg; p.wrap = wrap || ""; } else { p.pain = q.pt; p.painLv = lv; } }
 function painWorld(p, part){ const q = painOnRig(part); const lx = q.inj ? q.inj * 5 : q.pt[0], ly = q.inj ? (q.seg === "foot" ? 66 : 42) : q.pt[1]; return [p.x + p.face * lx, p.y + ly]; }
 // 리그 좌표 → 세계 좌표 (inLean 이면 몸통 기울기 안의 점 · face 반영) · 손 끝 세계 좌표 (어깨 ±22,-58 · 위팔 34 · 아래팔 30 · 손 = 아래팔 끝) — 소품을 손에 쥐이는 데 씀
 function rigWorld(p, lx, ly, inLean){ let x = lx, y = ly; if(inLean){ const th = p.lean * Math.PI / 180; x = lx * Math.cos(th) - ly * Math.sin(th); y = lx * Math.sin(th) + ly * Math.cos(th); } return [p.x + p.face * x, p.y + y]; }
@@ -1038,7 +1089,7 @@ function roomPoses(now){
   const R = roomPlan, u = (now - rstAt) / 1000, t = now / 1000, me = POSE0(), tc = POSE0(), M = R.M, T = R.T, home = [90, 563], desk = [225, 435]; let tFront = false;
   const walk = (p, from, to, dur) => { const k = segN(u, 0, dur, EZ.sine); p.x = lerpN(from[0], to[0], k); p.y = lerpN(from[1], to[1], k); p.face = to[0] >= from[0] ? 1 : -1; if(k < 1) walkPose(p, u / dur * TAU * 2.2, 1, 0, -1); };
   idlePose(me, t, 0); idlePose(tc, t, 1.7);
-  const lv = hasSym() ? .8 : 0, part = R.ctx.part;
+  const lv = hasSym() ? spotLv() : 0, part = R.ctx.part;   // v1.2 ④ 「얼마나 아파요」 를 적었으면 그만큼
   if(R.rst === 0){ me.x = home[0]; me.y = home[1]; if(!R.walked) walk(me, [-80, 563], home, 1.2); }
   else if(R.rst === 1) walk(me, home, [M[0], M[1] + 63], 1.2);
   else if(R.rst === 5) walk(me, [M[0], M[1] + 63], home, 1.2);
@@ -1048,6 +1099,7 @@ function roomPoses(now){
     else if(R.rst === 4) reactPose(me, R.react, u, part);
   }
   if(lv) applyPain(me, part, lv, R.rst >= 4 && R.act === "ice" ? "ice" : R.rst >= 4 && R.act === "band" ? "band" : "");
+  if(lv && R.rst === 0) holdPain(me, part, lv);
   if(R.rst <= 1 || !T){ tc.x = desk[0]; tc.y = desk[1]; deskPose(tc, t, now); }
   else { const tf = M[0] >= T[0] ? 1 : -1, tgt = R.lie ? [430, 500] : R.act === "height" ? [M[0], M[1] + 63 - 108] : R.act === "steth" ? rigWorld(me, 10, -50) : R.act === "temp" ? rigWorld(me, 26, -98) : painWorld(me, part);
     const low = !R.lie && tgt[1] > T[1] + 63 + 10, tp = low ? [tgt[0] - tf * 84, me.y] : [T[0], T[1] + 63];   // 허리 아래 과녁이면 내 바닥선 · 발 앞 58 까지 와서 무릎 꿇음 (그때는 나보다 앞에 그림 = tFront)
@@ -1074,7 +1126,7 @@ function rigLoop(now){
   requestAnimationFrame(rigLoop); if(now - lastRig < 33) return; lastRig = now;
   try {
     if(page === 1 && roomPlan){ const el = $("rigMe"), et = $("rigT"), ef = $("rigTF"); if(!el) return; const r = roomPoses(now); el.innerHTML = rigSvg("me", r.me); const ts = rigSvg("nurse", r.tc); if(et) et.innerHTML = r.tFront ? "" : ts; if(ef) ef.innerHTML = r.tFront ? ts : ""; const ep = $("rigProps"); if(ep) ep.innerHTML = r.props; }
-    else if(page === 3){ const el = $("rigMe3"), et = $("rigT3"); if(!el) return; const t = now / 1000, me = POSE0(), tc = POSE0(); idlePose(me, t, 0); idlePose(tc, t, 1.7); me.x = 470; me.y = 563; me.face = -1; tc.x = 225; tc.y = 435; deskPose(tc, t, now); if(hasSym()) applyPain(me, cur.part, .8); el.innerHTML = rigSvg("me", me); et.innerHTML = rigSvg("nurse", tc); }
+    else if(page === 3){ const el = $("rigMe3"), et = $("rigT3"); if(!el) return; const t = now / 1000, me = POSE0(), tc = POSE0(); idlePose(me, t, 0); idlePose(tc, t, 1.7); me.x = 470; me.y = 563; me.face = -1; tc.x = 225; tc.y = 435; deskPose(tc, t, now); if(hasSym()){ applyPain(me, cur.part, spotLv()); holdPain(me, cur.part, spotLv()); } el.innerHTML = rigSvg("me", me); et.innerHTML = rigSvg("nurse", tc); }
     else if(page === 4 && cur.ai){ const el = $("predRig"); if(!el) return; const {p, lv, s, K} = predPose(now); el.innerHTML = rigSvg("me", p); const pp = $("predProp"); if(pp) pp.innerHTML = predPropSvg(s, K, p.face);
       const pct = Math.round((1 - lv) * 100), bar = $("predBarF"); if(bar){ bar.setAttribute("width", (400 * (1 - lv)).toFixed(1)); bar.setAttribute("fill", lv > .6 ? "#e2463c" : lv > .25 ? "#f0b429" : "#2fa36b"); $("predPct").textContent = "회복 " + pct + "%"; }
       const z = 1 - segN(predP, .4, .7, EZ.sine), sv = $("predSvg"); if(sv) sv.setAttribute("viewBox", `${lerpN(0, 100, z).toFixed(1)} ${lerpN(0, 133, z).toFixed(1)} ${lerpN(640, 441, z).toFixed(1)} ${lerpN(620, 427, z).toFixed(1)}`); }
@@ -1088,6 +1140,10 @@ function demoTest(q){   // v1.0 시험 고리 — p1 · p2 · p3 · ask · paste
   cur.spots = severe ? [{part:"허리", how:["삠","부딪힘"], since:["피 남","열 남","토할 것 같음","멍"]}] : [{part:"왼쪽 발목", how:["삠"], since:["붓기"]}]; try{ syncSpots(); }catch(e){}
   cur.qa = [{q:"피가 계속 나요?", options:["계속 나요","멈췄어요"], a: severe ? "계속 나요" : "멈췄어요"}];
   if(q === "set"){ go(1); openSet(); return; } if(q === "p1"){ go(1); return; } if(q === "p2"){ go(2); return; } if(q === "p3"){ go(3); return; } if(q === "p5"){ go(5); return; }
+  if(q === "wall"){ D.settings.nick = "민지"; useTest(); saveCase(); const a = D.cases[D.cases.length - 1]; a.kind = "진짜"; setUrg(a.id, "그날 병원"); setRealPick(a.id, "heal", "2주"); setPick(a.id, "diag", 20); setPick(a.id, "care", 10);
+    cur = newCase(); cur.spots = [{part:"얼굴", how:["부딪힘"], since:["멍"]}]; try{ syncSpots(); }catch(e){} cur.qa = [{q:"x", options:["a"], a:"a"}]; useTest(); saveCase("연습"); selCase = a.id; go(5); return; }   // v1.2 시험 고리
+  if(q === "more"){ cur.spots = [{part:"얼굴", how:["부딪힘"], since:["붓기"], where:"코", lvl:8, feel:["욱신"], when:["누르면"]}]; try{ syncSpots(); }catch(e){} spotI = 0; go(2); return; }
+  if(q === "tl"){ useTest(); tl = "m1"; go(4); return; }
   if(q.startsWith("test")){ useTest(); go(4); return; }
   if(q === "paste"){ go(4); askDraft = askText(cur); $("ansIn").value = askDraft; readAnswer(); clearTimeout($("toast")._t); return; }
   go(4);
@@ -1183,7 +1239,7 @@ function setAv(k, v){ if(v==="true") v = true; if(v==="false") v = false; if(k =
 function drawBody(){
   const shapes = bodyShapes();
   $("bodyScene").innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet">
-    ${shapes.map(([n,s]) => s.replace("/>", ` class="part${cur.parts.includes(n)?" on":""}" data-part="${n}" onclick="pickPart('${n}')"><title>${n}</title></${s.match(/^<(\w+)/)[1]}>`)).join("")}${twinFace(view==="back")}
+    ${shapes.map(([n,s]) => s.replace("/>", ` class="part${cur.parts.includes(n)?" on":""}" data-part="${n}" onclick="pickPart('${n}')"><title>${n}</title></${s.match(/^<(\w+)/)[1]}>`)).join("")}${twinFace(view==="back", bodyMood())}
     ${cur.parts.length?`<text x="30" y="600" font-size="24" fill="#d93025" font-family="Jua">${esc(cur.parts.join(" · "))}</text>`:""}
     <text x="470" y="600" font-size="16" fill="#5f6b78" font-family="Jua" style="cursor:pointer" onclick="setView('${view==="front"?"back":"front"}')">🔄 ${view==="front"?"뒤로 돌리기":"앞으로 돌리기"}</text></svg>
     <div class="lbl tw" style="left:3%;top:3%">내 디지털 트윈 · ${view==="front"?"앞 — 머리 · 팔 · 배 · 다리 · 발을 눌러요":"뒤 — 등 · 허리 · 엉덩이 · 뒤꿈치를 눌러요"}</div>`;
@@ -1198,6 +1254,7 @@ function drawBody(){
   const chips = (id, list, k, cls) => $(id).innerHTML = list.map(h=>`<button class="b ${cls}${A&&A[k].includes(h)?" sel":""}" onclick="tog('${k}','${h}')">${h}</button>`).join("");
   chips("howChips", howFor(A && A.part ? [A.part] : []), "how", ""); chips("sickChips", SICK, "how", ""); chips("whenChips", WHEN, "since", "mint"); chips("stateChips", STATE, "since", "mint");
   $("histChips").innerHTML = ["없음","같은 곳 다친 적","자주 다침","수술 · 깁스한 적"].map(h=>`<button class="b dim${cur.hist===h?" sel":""}" onclick="cur.hist='${h}';drawBody()">${h}</button>`).join("");   // v1.1 E — 사례마다 하나 (부원 «사람마다 낫는 기간이 다르잖아»)
+  drawMore(A);   // v1.2 ②③
   $("howLbl").textContent = A && A.part ? "그 부위는" : "다쳤어요";
   $("nextSpotRow").style.display = A && (A.how.length || A.since.length) ? "flex" : "none";
   $("toTeacher").style.opacity = A ? ".55" : "1"; drawNav();
@@ -1205,6 +1262,26 @@ function drawBody(){
   $("frontBtn").classList.toggle("sel", view==="front"); $("backBtn").classList.toggle("sel", view==="back");
   $("toTeacher").disabled = !hasSym();
 }
+// v1.2 ②③ 더 자세히 (선택) — 전무님 10-23 «얼굴에 대한 세부 확인» · «아픈 기록 좀 더 자세히 아래에 · 아래 공간 활용»
+const FEEL = ["욱신","콕콕","찌릿","화끈","뻐근","쓰림"], WHENP = ["계속","가끔","움직일 때","누르면"];
+const WHERE = [[/얼굴/, ["이마","눈","코","입","귀","볼","턱","이"]], [/머리|뒤통수|이마/, ["이마","정수리","옆머리","관자놀이","뒤통수","머리 전체"]], [/배|옆구리/, ["윗배","배꼽 둘레","아랫배","오른쪽 아래","왼쪽 아래","배 전체"]],
+  [/가슴/, ["가운데","왼쪽","오른쪽","갈비뼈","가슴 전체"]], [/발목|발|뒤꿈치/, ["바깥 복사뼈","안쪽 복사뼈","발등","발바닥","발가락","뒤꿈치"]], [/무릎/, ["무릎뼈 앞","안쪽","바깥쪽","뒤 오금"]], [/손/, ["손목","손등","손바닥","손가락","엄지"]]];
+function whereFor(n){ if(!n) return []; const m = WHERE.find(x => x[0].test(n)); return m ? m[1] : ["위쪽","가운데","아래쪽","안쪽","바깥쪽","전체"]; }
+const LVL_C = v => v <= 3 ? "#2fa36b" : v <= 6 ? "#f0b429" : "#e2463c";
+function drawMore(A){
+  const el = $("moreCard"); if(!el) return;
+  if(!A){ el.innerHTML = `<h3><span class="no">3</span>더 자세히 <span class="hint">안 적어도 돼요 · ${cur.spots.length ? "위 이름을 누르면 그 곳을 더 적어요" : "아픈 곳을 누르면 열려요"}</span></h3>`; return; }
+  const row = (lab, list, k, multi) => `<div class="chiprow"><span class="cl">${lab}</span><div class="cs">${list.map(v => { const on = multi ? (A[k] || []).includes(v) : A[k] === v; return `<button class="b sm dim${on ? " sel" : ""}" onclick="setMore('${k}','${v}',${multi ? 1 : 0})">${v}</button>`; }).join("")}</div></div>`;
+  const W = whereFor(A.part);
+  el.innerHTML = `<h3><span class="no">3</span>${esc(A.part || "몸 안")} 더 자세히 <span class="hint">안 적어도 돼요 · 적으면 AI 가 더 잘 맞혀요</span></h3>`
+    + (W.length ? row(/얼굴/.test(A.part) ? "얼굴 어디" : "어디쯤", W, "where", 0) : "")
+    + `<div class="chiprow"><span class="cl">얼마나 아파요</span><div class="cs">${[1,2,3,4,5,6,7,8,9,10].map(v => `<button class="b sm dim${A.lvl === v ? " sel" : ""}" style="min-width:34px;padding:5px 6px;border-bottom:3px solid ${LVL_C(v)}" onclick="setMore('lvl',${v},0)">${v}</button>`).join("")}</div></div>`
+    + row("느낌", FEEL, "feel", 1) + row("언제 아파요", WHENP, "when", 1);
+}
+function setMore(k, v, multi){ const A = cur.spots[spotI]; if(!A) return; if(multi){ const a = A[k] = A[k] || [], i = a.indexOf(v); i < 0 ? a.push(v) : a.splice(i, 1); } else A[k] = A[k] === v ? (k === "lvl" ? 0 : "") : v; sfx("pop"); drawBody(); }
+function moreText(x){ const m = [x.where && "어디쯤 " + x.where, x.lvl && "아픔 " + x.lvl + "/10", (x.feel || []).length && "느낌 " + x.feel.join(", "), (x.when || []).length && "아플 때 " + x.when.join(", ")].filter(Boolean); return m.length ? " / " + m.join(" · ") : ""; }
+function spotLv(){ const L = Math.max(0, ...cur.spots.map(x => +x.lvl || 0)); return L ? .2 + L * .075 : .8; }   // 「얼마나 아파요」 → 아바타 아픈 정도 (안 적으면 예전대로 .8)
+function bodyMood(){ const sp = cur.spots; if(!sp.some(x => x.how.length || x.since.length)) return undefined; return sp.some(x => (+x.lvl || 0) >= 7 || x.since.some(s => ["못 디딤","못 움직임","피 남","숨 가쁨"].includes(s))) ? "bad" : "hurt"; }
 // v0.6 — 부위별 묶음(spots) : 한 곳 누르고 → 어떻게 · 언제 · 상태 채운 뒤 → 다음 곳 (전무님 10-21 밤 «그 다음 부위로 넘어가게끔 순서»)
 let spotI = -1;   // 지금 채우는 묶음 번호
 function syncSpots(){   // spots → parts · part · side · how · since (옛 코드 · 질문 글 · 탐구 벽이 그대로 쓰게)
@@ -1215,8 +1292,10 @@ function syncSpots(){   // spots → parts · part · side · how · since (옛 
 }
 function pickPart(n){ sfx("tap");   // 셋까지 · 한 곳씩 : 비어 있는 활성 묶음이면 부위만 바꿈 · 채웠으면 새 묶음 · 같은 곳 다시 누르면 빠짐
   if(cur.ai){ cur = newCase(); spotI = -1; }
+  if(!cur.t0) cur.t0 = Date.now();   // v1.2 ⑦ 저장까지 걸린 초
   const sp = cur.spots, i = sp.findIndex(x=>x.part===n), A = sp[spotI];
   if(i>=0){ if(i===spotI){ sp.splice(i,1); spotI = sp.length-1; toast(n+" 을 뺐어요"); } else { spotI = i; toast(n+" 을 고쳐요"); } }
+  else if(A && !A.part){ A.part = n; toast("몸 안 → " + n + " 으로 옮겼어요"); }   // v1.2 ① 칩 먼저 누른 «몸 안» 을 누른 부위로 (전무님 10-23 «얼굴 선택 → 몸 안으로 표시»)
   else if(A && A.part && !A.how.length && !A.since.length){ A.part = n; }
   else { if(sp.filter(x=>x.part).length>=3) return toast("아픈 곳은 셋까지 — 위 이름의 ✕ 로 하나를 빼요"); sp.push({part:n, how:[], since:[]}); spotI = sp.length-1; if(sp.length>1) toast(n+" — 이 곳은 어떻게 아픈가요?"); }
   drawBody();
@@ -1232,7 +1311,7 @@ function doneSpot(){   // 한 곳 다 적음 → 저장(활성 해제) → 다�
 function setView(v){ view = v; drawBody(); }
 function clearParts(){ cur.spots = []; spotI = -1; drawBody(); }
 function tog(k, v){ sfx("pop");   // 활성 묶음의 칩 · 묶음이 없는데 「몸이 아파요」 칩이면 몸 안 묶음을 만듦
-  let A = cur.spots[spotI];
+  let A = cur.spots[spotI]; if(!cur.t0) cur.t0 = Date.now();
   if(!A){ if(k==="how" && SICK.includes(v)){ cur.spots.push({part:"", how:[], since:[]}); spotI = cur.spots.length-1; A = cur.spots[spotI]; } else return toast("먼저 디지털 트윈에서 아픈 곳을 눌러요 (몸 안이면 「몸이 아파요」 칩부터)"); }
   const a = A[k]; const i = a.indexOf(v); i<0 ? a.push(v) : a.splice(i,1); drawBody();
 }
@@ -1317,6 +1396,7 @@ function drawPred(){
   const names = {today:"오늘", d3:"3일 뒤", w1:"1주 뒤", w2:"2주 뒤", m1:"1달 뒤", m3:"3달 뒤"}, place = {today:"🏥 보건실", d3:"🏠 집", w1:"🏫 교실", w2:"⚽ 운동장", m1: a.color === "빨강" ? "🏥 병원 검진" : "🚴 밖에서 놀기", m3:"🏃 운동회"};
   const line = String(tlText(tl)), l1 = line.length > 16 ? line.slice(0, 16) : line, l2 = line.length > 16 ? line.slice(16, 34) + (line.length > 34 ? "…" : "") : "";
   const prev = KS[KS.indexOf(tl) - 1], next = KS[KS.indexOf(tl) + 1];
+  tlInfo = k => `<i class="lvd" style="background:${LVC[lv(k)]}"></i><b>${names[k]}</b><span>${WORD[lv(k)]} · ${esc(String(tlText(k)).slice(0, 30))}</span>`;   // v1.2 ⑤ 고른 칸 그날 상태 한 줄
   S.innerHTML = `<svg viewBox="0 0 640 620" preserveAspectRatio="xMidYMid meet"><svg id="predSvg" width="640" height="620" viewBox="0 0 640 620" preserveAspectRatio="xMidYMax slice">${PRED_BG[tl]()}<g transform="translate(320,350) scale(1.45)"><g id="predProp"></g><g id="predRig"></g></g></svg>
     <text x="320" y="36" font-size="22" fill="#1f2630" font-family="Jua" text-anchor="middle">${names[tl]} · ${place[tl]}</text>
     <rect x="120" y="520" width="400" height="10" rx="5" fill="#dfe5ec"/><rect id="predBarF" x="120" y="520" width="0" height="10" rx="5" fill="#2fa36b"/><text id="predPct" x="520" y="512" font-size="14" text-anchor="end" fill="#2f3a4a" font-family="Jua"></text>${KS.map((k,i)=>`<text x="${120+400*KP[i]}" y="543" font-size="11" text-anchor="middle" fill="${k===tl?"#1f2630":"#8a929c"}" font-family="Jua" font-weight="${k===tl?700:400}">${names[k]}</text>`).join("")}
@@ -1329,14 +1409,22 @@ function drawPred(){
   P.innerHTML = `${a.model === "시험 답" ? `<div class="card" style="background:#fff3f2;border-color:#f1c7c3"><b style="font:17px 'Jua';color:#8a1f17">⚠ 시험 답 — 연습용이에요 · 진짜 AI 가 아니에요</b><div class="hint" style="margin-top:3px">갈래마다 정해 둔 글이라 늘 비슷해요 · 진짜 탐구는 📋 질문 글을 복사해 GPT · 제미나이 · 클로드에 묻고 답을 붙여 넣어요 <button class="b sm" onclick="cur.ai=null;drawPred()">🤖 AI 에게 묻기로</button></div></div>` : ""}
     <div class="now1">${cur.id ? "✔ 저장됨 → 👉 아래 「⑤ 탐구 벽 보기」" : "👉 지금 할 일 — 시간 줄(오늘 → 3달 뒤)을 눌러 보고 → 아래 「📌 사례로 저장」"}</div>
     <div class="card c-${a.color}" style="padding:14px 16px"><div class="light big"><div class="dots">${COLORS.map(c=>`<i class="${{초록:"g",노랑:"y",빨강:"r"}[c]}${a.color===c?" on":""}"></i>`).join("")}</div><div><b>${a.color} · ${{초록:"집에서 돌봐도 돼요",노랑:"며칠 안에 병원",빨강:"지금 바로 병원 · 어른에게"}[a.color]}</b><div class="hint">${esc(a.diag)} · ${esc(a.why)}</div></div></div></div>
-    <div class="card"><div class="time">${KS.map(k=>`<div class="${k===tl?"on":""}${KS.indexOf(k)<KS.indexOf(tl)?" done":""}" onclick="tl='${k}';drawPred()">${names[k]}</div>`).join("")}</div></div>
+    <div class="card"><div class="time" id="tlBar" style="--f:${KS.indexOf(tl) / 5}" onpointerdown="tlDrag(event)"><span class="tlf"></span>${KS.map(k=>`<div data-k="${k}" class="${k===tl?"on":""}${KS.indexOf(k)<KS.indexOf(tl)?" done":""}">${names[k]}<i class="lvd" style="background:${LVC[lv(k)]}"></i></div>`).join("")}</div><div class="tlnow" id="tlNow">${tlInfo(tl)}</div><div class="hint" style="margin-top:2px">칸을 누르거나 줄을 끌어 보세요 — 칸 사이도 이어서 바뀌어요</div></div>
     <div class="card"><h3><span class="no">${names[tl]}</span>${place[tl]} · 디지털 트윈은 이렇게</h3><div class="kv"><span>몸</span><b>${esc(tlText(tl))}</b></div><div class="kv"><span>할 것</span><b>${esc(tip)}</b></div><div class="kv"><span>병원</span><b>${a.color==="빨강"?"지금 바로":a.color==="노랑"?"며칠 안에 (안 갔으면 가기)":"더 아프면"}</b></div></div>
     <div class="card"><h3><span class="no">💡</span>지금 할 수 있는 것</h3><div class="hint">${esc(care.join(" · "))}</div><div class="hint" style="color:#8a1f17;margin-top:4px">빨강 신호 : ${esc((a.red||[]).join(" · "))}</div></div>
     <div class="hint">답한 것 : ${esc(a.model)} · ${fmt(a.at)}</div>
-    <div class="row stick"><button class="big" style="margin:0;flex:1" onclick="${cur.id?"go(5)":"saveCase()"}">${cur.id?"👉 ⑤ 탐구 벽 보기 (사례 "+cur.id+"번 저장됨)":"👉 여기 눌러요 — 📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🔄 처음부터</button>`:""}</div>`;
+    <div class="row stick"><button class="big" style="margin:0;flex:1" onclick="${cur.id?"go(5)":"saveCase()"}">${cur.id?"👉 ⑤ 탐구 벽 보기 (사례 "+cur.id+"번 저장됨)":"👉 여기 눌러요 — 📌 사례로 저장"}</button><button class="big sub" style="margin:0;flex:1" onclick="copyAsk()">📋 질문 글 복사</button>${cur.id?"":`<button class="b sm dim" style="margin:0;flex:0 0 auto" onclick="saveCase('연습')" title="지어낸 것 · 연습이면 — 성적표에는 안 들어가요">연습으로 저장</button>`}${cur.id?`<button class="big sub" style="margin:0;flex:0 0 auto" onclick="restart()">🔄 처음부터</button>`:""}</div>`;
 }
 // AI 에게 묻기 상자 — ① 질문 글 복사 · AI 열기 ② 답 붙여 넣기 → 읽어서 디지털 트윈에 (전무님 10-21 «무료 AI · GPT 익숙 · 질문 글 만들어 주고 답을 받아 넣는 꼴»)
 let askDraft = "", needColor = false;
+const LVC = ["#2fa36b","#9cc34a","#f0b429","#e2463c"]; let tlInfo = k => "";   // v1.2 ⑤ 아픈 정도 0~3 점 색 · 시간 줄 한 줄
+function tlDrag(ev){   // v1.2 ⑤ 시간 줄 끌기 — 칸 사이도 이어서(아바타 · 회복 막대) · 놓으면 가까운 칸
+  const bar = ev.currentTarget, cells = [...bar.querySelectorAll("div[data-k]")], KS = cells.map(c => c.dataset.k);
+  const at = e => { const r = bar.getBoundingClientRect(), w = r.width / cells.length, f = clampN((e.clientX - r.left - w / 2) / (r.width - w), 0, 1) * 5, i = Math.min(4, Math.floor(f)); return {f, v: KP[i] + (KP[i + 1] - KP[i]) * (f - i), k: KS[Math.round(f)]}; };
+  const move = e => { const q = at(e), n = KS.indexOf(q.k); predFrom = predTo = q.v; predAt = performance.now(); bar.style.setProperty("--f", (q.f / 5).toFixed(3)); cells.forEach((c, j) => c.className = j === n ? "on" : j < n ? "done" : ""); $("tlNow").innerHTML = tlInfo(q.k); };
+  const end = e => { bar.classList.remove("drag"); bar.onpointermove = bar.onpointerup = bar.onpointercancel = null; const q = at(e); if(q.k !== tl) sfx("tap"); tl = q.k; drawPred(); };
+  try{ bar.setPointerCapture(ev.pointerId); }catch(e){} bar.classList.add("drag"); move(ev); bar.onpointermove = move; bar.onpointerup = bar.onpointercancel = end;
+}
 const AI_URL = {"GPT":"https://chatgpt.com/", "제미나이":"https://gemini.google.com/app", "클로드":"https://claude.ai/new"};
 function drawAsk(S, P){
   const ready = cur.qa.length && cur.qa.every(x=>x.a);
@@ -1430,7 +1518,7 @@ const SYS = `너는 고등학교 보건실의 가상 보건 선생님이다. 학
 function examText(c){ const e = c.exam || {}; return [e.temp ? "체온 " + e.temp + " ℃" + (e.fever ? " (열)" : "") : "", e.height ? "키 " + e.height + " cm" : "", e.steth || "", e.eye || "", e.band || "", e.ice || "", e.water || "", e.wash || ""].filter(Boolean).join(" · "); }
 function caseText(c){
   const sp = (c.spots && c.spots.length) ? c.spots : [{part:(partsOf(c)[0]||""), how:c.how, since:c.since}];
-  const lines = sp.map((x,i)=>`- ${x.part||"몸 안 (부위 없음)"}${i===0&&sp.length>1?" (주된 곳)":""} : ${x.how.join(", ")||"무슨 일인지 모름"} / ${x.since.join(", ")||"언제부터 · 상태 모름"}`).join("\n");
+  const lines = sp.map((x,i)=>`- ${x.part||"몸 안 (부위 없음)"}${i===0&&sp.length>1?" (주된 곳)":""} : ${x.how.join(", ")||"무슨 일인지 모름"} / ${x.since.join(", ")||"언제부터 · 상태 모름"}${moreText(x)}`).join("\n");
   return `부위 : ${partsOf(c).join(", ")||"(몸 안 · 부위 없음)"}\n부위별로 :\n${lines}\n학생 말 : ${c.text||"(없음)"}\n전에 다친 적 : ${c.hist||"(안 적음)"}` + (examText(c) ? `\n보건실에서 잰 것 : ${examText(c)}` : "") + (c.qa.length?`\n되묻기 답 :\n`+c.qa.map(x=>`- ${x.q} → ${x.a}`).join("\n"):"");
 }
 async function callClaude(user){
@@ -1456,8 +1544,9 @@ function copySym(){ copyAsk(); }
 function copy(t, msg){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(()=>toast(msg)).catch(()=>{ const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); toast(msg); }); }
 
 /* ===== [6] JS 탐구 벽 ===== */
-function saveCase(){
+function saveCase(kind){
   if(!cur.ai) return; cur.id = D.nextId++; cur.made = new Date().toISOString(); cur.ver = VER;
+  cur.who = D.settings.nick || ""; cur.kind = kind || (cur.ai.model === "시험 답" ? "연습" : "진짜"); cur.secs = cur.t0 ? Math.round((Date.now() - cur.t0) / 1000) : 0;   // v1.2 ⑥ ⑦
   D.cases.push(JSON.parse(JSON.stringify(cur))); save(); selCase = cur.id; toast("사례 "+cur.id+"번으로 붙였어요 → 탐구 벽"); drawTop(); drawPred(); confetti(); sfx("chime"); speak("사례 " + cur.id + "번으로 탐구 벽에 붙였어요");
 }
 function confetti(){   // 색종이 30장 — 2초 뒤 지움
@@ -1465,37 +1554,80 @@ function confetti(){   // 색종이 30장 — 2초 뒤 지움
   for(let i=0;i<30;i++){ const e = document.createElement("i"); e.className = "confetti"; e.style.left = Math.random()*100+"vw"; e.style.background = cols[i%cols.length]; e.style.animationDelay = (Math.random()*.4)+"s"; document.body.appendChild(e); setTimeout(()=>e.remove(), 2200); }
 }
 function total(c){ const s = c.score; if(s.diag===""||s.urgent===""||s.care==="") return null; return (+s.diag||0)+(+s.urgent||0)+(+s.care||0); }
-function average(){ const t = D.cases.map(total).filter(x=>x!=null); return t.length ? Math.round(t.reduce((a,b)=>a+b,0)/t.length) : null; }
+function average(){ const t = D.cases.filter(c=>counted(c)&&hasReal(c)).map(total).filter(x=>x!=null);   // v1.2 — 연습 · 뺀 · 실제 미확인은 안 셈
+  return t.length ? Math.round(t.reduce((a,b)=>a+b,0)/t.length) : null; }
 function drawWall(){
-  $("posters").innerHTML = D.cases.length ? D.cases.map(c=>{ const t = total(c); return `<div class="poster${selCase===c.id?" on":""}" onclick="selCase=${c.id};drawWall()"><span class="tag ${c.ai.color}">${c.ai.color}</span><b>사례 ${c.id} ${esc(partLabel(c))}</b>예측 ${esc(c.ai.diag)}<br>실제 ${esc(c.real.diag||"미확인")}<span class="sc${t!=null&&t<60?" bad":""}">${t==null?"—":t}</span></div>`; }).join("") : `<div class="hint">아직 사례가 없어요 — 앞날 예측에서 「사례로 저장」</div>`;
+  const selV = $("selIn") ? $("selIn").value : "";
+  $("posters").innerHTML = D.cases.length ? D.cases.map(c=>{ const t = total(c), sus = suspect(c), out = c.out && c.out.on, due = !hasReal(c) && daysSince(c) >= 3 && counted(c);
+    return `<div class="poster${selCase===c.id?" on":""}" style="${out||c.kind==="연습"?"opacity:.55":""}" onclick="selCase=${c.id};drawWall()"><span class="tag ${c.ai.color}">${c.ai.color}</span><b>사례 ${c.id} ${esc(partLabel(c))}</b><span style="color:#5f6b78">${esc(c.who||"—")} · ${c.kind==="연습"?"연습":"진짜"}${out?" · 뺌 ("+esc(c.out.why)+")":""}</span><br>예측 ${esc(c.ai.diag)}<br>실제 ${esc(c.real.diag||c.real.urgent||"미확인")}${due?'<br><b style="color:#b35c00">⏰ 실제 적을 차례</b>':""}${sus.length&&!out&&c.kind!=="연습"?'<br><span style="color:#b4241b">⚠ 확인 필요</span>':""}<span class="sc${t!=null&&t<60?" bad":""}">${t==null?"—":t}</span></div>`; }).join("") : `<div class="hint">아직 사례가 없어요 — 앞날 예측에서 「사례로 저장」</div>`;
   const c = D.cases.find(x=>x.id===selCase);
+  const btn = (on, fn, lab) => `<button class="b sm${on?" sel":""}" onclick="${fn}">${lab}</button>`;
+  const uc = c ? cmpColor(c.ai.color, realColor(c)) : "", hc = c ? healCmp(c) : "", sus = c ? suspect(c) : [];
   $("caseDetail").innerHTML = !c ? "" : `<div class="cmp">
-    <div class="c ai"><h4>디지털 트윈 예측 (${esc(c.ai.model)}) · 사례 ${c.id}</h4><p><b>진단</b>${esc(c.ai.diag)}</p><p><b>긴급</b>${c.ai.color}</p><p><b>1주 뒤</b>${esc(c.ai.timeline.w1)}</p><p><b>대처</b>${esc((c.ai.care||[]).join(" · "))}</p><p><b>답한 것</b>${esc(c.ai.model)}</p></div>
-    <div class="c real"><h4>실제 · 사례 ${c.id} <span class="hint">사람이 적음</span></h4>
-      <input type="text" placeholder="실제 진단 (예 : 인대 늘어남)" value="${esc(c.real.diag)}" oninput="setReal(${c.id},'diag',this.value)">
+    <div class="c ai"><h4>디지털 트윈 예측 (${esc(c.ai.model)}) · 사례 ${c.id}</h4><p><b>진단</b>${esc(c.ai.diag)}</p><p><b>긴급</b>${c.ai.color}</p><p><b>1주 뒤</b>${esc(c.ai.timeline.w1)}</p><p><b>AI 가 본 나을 때</b>${({d3:"3일 안",w1:"1주",w2:"2주",m1:"1달",m3:"3달",later:"3달 넘게 · 안 적음"})[aiHeal(c)]}</p><p><b>대처</b>${esc((c.ai.care||[]).join(" · "))}</p></div>
+    <div class="c real"><h4>실제 · 사례 ${c.id} <span class="hint">사람이 골라요 · 나중에</span></h4>
+      <div class="hint" style="margin-top:2px">실제로 얼마나 급했나</div><div class="row" style="gap:4px;flex-wrap:wrap">${URG.map(v=>btn(c.real.urgent===v, `setUrg(${c.id},'${v}')`, v)).join("")}</div>
+      ${uc?`<div style="margin-top:4px">긴급도 → <b style="color:${uc==="맞음"?"#1f8a5b":uc==="과함"?"#b35c00":"#d93025"}">${uc}</b> <span class="hint">AI ${c.ai.color} · 실제 ${realColor(c)}</span></div>`:""}
+      <div class="hint" style="margin-top:6px">실제로 나은 때</div><div class="row" style="gap:4px;flex-wrap:wrap">${HEAL.map(v=>btn(c.real.heal===v, `setRealPick(${c.id},'heal','${v}')`, v)).join("")}</div>
+      ${hc?`<div style="margin-top:4px">경과 → <b style="color:${hc==="맞음"?"#1f8a5b":"#b35c00"}">${hc}</b></div>`:""}
+      <input type="text" placeholder="실제 진단 (예 : 인대 늘어남)" value="${esc(c.real.diag)}" oninput="setReal(${c.id},'diag',this.value)" style="margin-top:6px">
       <input type="text" placeholder="병원 간 때 (예 : 2일 뒤)" value="${esc(c.real.hospital)}" oninput="setReal(${c.id},'hospital',this.value)">
-      <input type="text" placeholder="치료 (예 : 보조기 2주)" value="${esc(c.real.treat)}" oninput="setReal(${c.id},'treat',this.value)">
-      <input type="text" placeholder="나은 때 (예 : 약 3주)" value="${esc(c.real.healed)}" oninput="setReal(${c.id},'healed',this.value)"></div></div>
-    <div class="card" style="margin-top:10px"><h3>세 AI 갈림 <span class="hint">같은 질문 글을 다른 AI 에도 물어 색 · 예상을 적음</span></h3>
-      ${[["gpt","GPT"],["gemini","제미나이"],["claude","클로드"]].map(([k,n],i)=>`<div class="row"${i?' style="margin-top:4px"':""}><span style="width:70px">${n}</span>${selColor(c.id,k,c.three[k].color)}<input type="text" style="flex:1;min-width:120px" placeholder="${n} 예상" value="${esc(c.three[k].diag)}" oninput="setThree(${c.id},'${k}','diag',this.value)">${String(c.ai.model).startsWith(n)?'<span class="tag '+c.ai.color+'">선생님 답</span>':""}</div>`).join("")}</div>
-    <div class="card" style="margin-top:10px"><h3>점수 <span class="hint">사람이 매김 · 셋 다 적어야 총점</span></h3>
-      <div class="scores"><div><label>진단 (0~40)</label><input type="number" min="0" max="40" value="${c.score.diag}" onchange="setScore(${c.id},'diag',this.value,40)"></div><div><label>긴급도 (0~40)</label><input type="number" min="0" max="40" value="${c.score.urgent}" onchange="setScore(${c.id},'urgent',this.value,40)"></div><div><label>대처 (0~20)</label><input type="number" min="0" max="20" value="${c.score.care}" onchange="setScore(${c.id},'care',this.value,20)"></div></div>
+      <input type="text" placeholder="치료 (예 : 보조기 2주)" value="${esc(c.real.treat)}" oninput="setReal(${c.id},'treat',this.value)"></div></div>
+    <div class="card" style="margin-top:10px"><h3>세 AI 갈림 <span class="hint">같은 질문 글을 다른 AI 에도 물어 색 · 예상을 적음 · 실제 긴급도를 고르면 누가 맞았는지 나와요</span></h3>
+      ${[["gpt","GPT"],["gemini","제미나이"],["claude","클로드"]].map(([k,n],i)=>{ const m = cmpColor(c.three[k].color, realColor(c)); return `<div class="row"${i?' style="margin-top:4px"':""}><span style="width:70px">${n}</span>${selColor(c.id,k,c.three[k].color)}<input type="text" style="flex:1;min-width:120px" placeholder="${n} 예상" value="${esc(c.three[k].diag)}" oninput="setThree(${c.id},'${k}','diag',this.value)">${m?`<b style="color:${m==="맞음"?"#1f8a5b":"#b35c00"}">${m}</b>`:""}${String(c.ai.model).startsWith(n)?'<span class="tag '+c.ai.color+'">선생님 답</span>':""}</div>`; }).join("")}</div>
+    <div class="card" style="margin-top:10px"><h3>점수 <span class="hint">사람이 골라요 · 셋 다 있어야 총점</span></h3>
+      <div class="row" style="gap:4px;flex-wrap:wrap"><span style="width:92px">진단 (40)</span>${[[40,"맞음 40"],[20,"비슷 20"],[0,"틀림 0"]].map(([v,l])=>btn(c.score.diag===v, `setPick(${c.id},'diag',${v})`, l)).join("")}</div>
+      <div class="row" style="gap:4px;margin-top:4px"><span style="width:92px">긴급도 (40)</span><b>${c.score.urgent===""?"—":c.score.urgent}</b><span class="hint">${uc?"실제 긴급도에서 저절로 · "+uc:"위 「실제로 얼마나 급했나」 를 고르면 저절로"}</span></div>
+      <div class="row" style="gap:4px;flex-wrap:wrap;margin-top:4px"><span style="width:92px">대처 (20)</span>${[[20,"맞음 20"],[10,"일부 10"],[0,"틀림 0"]].map(([v,l])=>btn(c.score.care===v, `setPick(${c.id},'care',${v})`, l)).join("")}</div>
       <div class="row" style="margin-top:8px"><span class="hint">틀린 이유</span><select style="max-width:200px" onchange="setField(${c.id},'wrong',this.value)">${WRONG.map(w=>`<option${c.wrong===w?" selected":""}>${w}</option>`).join("")}</select><span class="hint">총점 <b>${total(c)==null?"—":total(c)}</b></span></div>
-      <input type="text" placeholder="메모 한 줄" value="${esc(c.memo)}" oninput="setField(${c.id},'memo',this.value)" style="margin-top:6px">
-      <div class="row" style="margin-top:6px"><button class="b dim sm" onclick="delCase(${c.id})">이 사례 지움</button><span class="hint">번호는 다시 안 써요</span></div></div>`;
-  // 성적표
-  const rows = D.cases.map(c=>`<tr><td>${c.id} ${esc(partLabel(c))}</td><td>${c.ai.color}</td><td>${esc(c.real.diag||"미확인")}</td><td class="n">${c.score.diag===""?"—":c.score.diag}</td><td class="n">${c.score.urgent===""?"—":c.score.urgent}</td><td class="n">${c.score.care===""?"—":c.score.care}</td><td class="n"><b${total(c)!=null&&total(c)<60?' style="color:#d93025"':""}>${total(c)==null?"—":total(c)}</b></td><td>${c.wrong==="(없음)"?"—":`<span class="tag y">${c.wrong}</span>`}</td></tr>`).join("");
-  const scored = D.cases.filter(c=>total(c)!=null);
+      <input type="text" placeholder="메모 한 줄" value="${esc(c.memo)}" oninput="setField(${c.id},'memo',this.value)" style="margin-top:6px"></div>
+    <div class="card" style="margin-top:10px"><h3>성적표에 넣을까 <span class="hint">지우지 않고 빼기만 · 까닭은 보고서에</span></h3>
+      <div class="row" style="gap:4px">${btn(c.kind!=="연습", `setKind(${c.id},'진짜')`, "진짜 있었던 일")}${btn(c.kind==="연습", `setKind(${c.id},'연습')`, "연습 · 지어낸 것")}<span class="hint">${esc(c.who||"—")} · 저장까지 ${c.secs?c.secs+"초":"—"}</span></div>
+      ${sus.length?`<div style="margin-top:6px;color:#b4241b">⚠ 확인 필요 — ${sus.map(esc).join(" · ")}</div>`:`<div class="hint" style="margin-top:6px">걸리는 것 없음</div>`}
+      <div class="row" style="gap:4px;margin-top:6px"><label class="hint"><input type="checkbox" ${c.out&&c.out.on?"checked":""} onchange="setOut(${c.id},this.checked)"> 성적표에서 빼기</label>${c.out&&c.out.on?`<select style="max-width:120px" onchange="setOut(${c.id},true,this.value)">${OUTWHY.map(w=>`<option${c.out.why===w?" selected":""}>${w}</option>`).join("")}</select>`:""}</div>
+      <div class="row" style="margin-top:6px"><button class="b dim sm" onclick="delCase(${c.id})">이 사례 지움</button><span class="hint">번호는 다시 안 써요 · 빼기를 권해요</span></div></div>`;
+  // 성적표 — 진짜 · 안 뺀 사례만 (v1.2)
+  const C = D.cases.filter(counted), R = C.filter(hasReal), scored = R.filter(c=>total(c)!=null);
+  const rows = C.map(c=>{ const m = cmpColor(c.ai.color, realColor(c)); return `<tr><td>${c.id} ${esc(partLabel(c))}<br><span class="hint">${esc(c.who||"")}</span></td><td>${c.ai.color} → ${realColor(c)||"?"}<br><b style="color:${m==="맞음"?"#1f8a5b":m?"#b35c00":"#8a929c"}">${m||"미확인"}</b>${c.wrong!=="(없음)"&&c.wrong!==m?` <span class="tag y">${c.wrong}</span>`:""}</td><td>${healCmp(c)||"—"}</td><td class="n">${c.score.diag===""?"—":c.score.diag}</td><td class="n">${c.score.urgent===""?"—":c.score.urgent}</td><td class="n">${c.score.care===""?"—":c.score.care}</td><td class="n"><b${total(c)!=null&&total(c)<60?' style="color:#d93025"':""}>${total(c)==null?"—":total(c)}</b></td></tr>`; }).join("");
   const avgOf = k => scored.length ? Math.round(scored.reduce((a,c)=>a+(+c.score[k]||0),0)/scored.length) : "—";
-  const redOk = D.cases.filter(c=>c.real.diag && c.ai.color==="빨강").length;
-  const missed = D.cases.filter(c=>c.ai.color==="초록" && (c.wrong==="가볍게 봄")).length;
-  const same = D.cases.filter(c=>threeCols(c).length>=2 && new Set(threeCols(c)).size===1).length;   // 둘 이상 적혔고 다 같은 색
-  const diff = D.cases.filter(c=>new Set(threeCols(c)).size===3).length;
-  $("report").innerHTML = `<table class="rep"><tr><th>사례</th><th>AI 색</th><th>실제</th><th class="n">진단 40</th><th class="n">긴급 40</th><th class="n">대처 20</th><th class="n">총점</th><th>틀린 이유</th></tr>${rows}
-    <tr style="background:#f6f8fb"><td><b>평균 (${scored.length}건)</b></td><td></td><td></td><td class="n">${avgOf("diag")}</td><td class="n">${avgOf("urgent")}</td><td class="n">${avgOf("care")}</td><td class="n"><b>${average()==null?"—":average()}</b></td><td></td></tr></table>
-    <div class="card" style="margin-top:10px"><h3>🚦 긴급도는 맞았나 <span class="hint">진단명보다 중요 (계획서 3-2)</span></h3><div class="kv"><span>AI 가 빨강이라 한 사례 (실제 적힌 것)</span><b>${redOk}건</b></div><div class="kv"><span>가볍게 봄 (병원 가야 할 걸 초록)</span><b style="color:#d93025">${missed}건</b></div></div>
-    <div class="card" style="margin-top:10px"><h3>👥 세 AI 비교 <span class="hint">GPT · 제미나이 · 클로드 칸 (둘 이상 적힌 사례)</span></h3><div class="kv"><span>다 같은 색</span><b>${same}건</b></div><div class="kv"><span>셋이 다 다름</span><b>${diff}건</b></div></div>`;
+  const st = stats();
+  $("report").innerHTML = `<div class="hint" style="margin-bottom:4px">${st.line}</div><table class="rep"><tr><th>사례</th><th>긴급도 AI → 실제</th><th>경과</th><th class="n">진단 40</th><th class="n">긴급 40</th><th class="n">대처 20</th><th class="n">총점</th></tr>${rows}
+    <tr style="background:#f6f8fb"><td><b>평균 (${scored.length}건)</b></td><td></td><td></td><td class="n">${avgOf("diag")}</td><td class="n">${avgOf("urgent")}</td><td class="n">${avgOf("care")}</td><td class="n"><b>${average()==null?"—":average()}</b></td></tr></table>
+    <div class="card" style="margin-top:10px"><h3>🚦 긴급도는 맞았나 <span class="hint">진단명보다 중요 · 실제 긴급도를 고른 사례 ${st.u}건</span></h3><div class="kv"><span>맞힘</span><b>${st.pct(st.hit,st.u)}</b></div><div class="kv"><span>가볍게 봄 (병원 가야 할 걸 낮게)</span><b style="color:#d93025">${st.light}건</b></div><div class="kv"><span>과함 (실제보다 높게)</span><b>${st.over}건</b></div><div class="kv"><span>경과(나은 때) 맞힘</span><b>${st.pct(st.healOk,st.h)}</b></div></div>
+    <div class="card" style="margin-top:10px"><h3>👥 세 AI 비교 <span class="hint">실제 긴급도와 견줘 누가 맞았나</span></h3>${st.ai.map(a=>`<div class="kv"><span>${a.n}</span><b>${st.pct(a.ok,a.all)}</b></div>`).join("")}<div class="kv"><span>셋 다 같은 색 / 셋이 다 다름</span><b>${st.same}건 / ${st.diff}건</b></div></div>`;
+  const nAi = D.cases.filter(c=>c.aiFlag&&c.aiFlag.v==="의심").length, both = D.cases.filter(c=>c.aiFlag&&c.aiFlag.v==="의심"&&c.out&&c.out.on).length;
+  $("aiSel").innerHTML = `<div class="card" style="margin-top:10px"><h3>🤖 AI 선별 <span class="hint">장난 · 성의 없는 사례를 AI 가 먼저 짚어요 · 빼기는 사람이</span></h3>
+    <div class="row"><button class="b sm" onclick="copySelQ()">① 선별 질문 글 복사</button><span class="hint">→ GPT · 제미나이 · 클로드에 붙여 넣기 (예측이 맞았는지는 안 보냄)</span></div>
+    <textarea id="selIn" rows="2" placeholder="② AI 가 쓴 선별 답을 통째로 붙여 넣어요" style="width:100%;margin-top:6px"></textarea>
+    <div class="row" style="margin-top:4px"><button class="b sm" onclick="readSel()">🔎 선별 답 읽기</button><span class="hint">AI 의심 ${nAi}건 · 그중 사람이 뺀 것 ${both}건</span></div></div>`;
+  if(selV) $("selIn").value = selV;
   $("sig").textContent = `메타버스 보건실 ${VER} · 동아리 탐구용 · DSM 57 · 자료는 이 기기 안에만`;
+}
+function stats(){   // v1.2 ⑧ — 성적표 · 요약 표가 같이 씀
+  const all = D.cases, C = all.filter(counted), R = C.filter(hasReal), U = R.filter(c=>realColor(c)), H = R.filter(c=>c.real.heal);
+  const pct = (a,b) => b ? Math.round(a*100/b) + "% (" + a + "/" + b + ")" : "—";
+  const cnt = m => U.filter(c=>cmpColor(c.ai.color, realColor(c))===m).length;
+  const ai = [["gpt","GPT"],["gemini","제미나이"],["claude","클로드"]].map(([k,n])=>{ const A = U.filter(c=>c.three[k]&&c.three[k].color); return {n, all:A.length, ok:A.filter(c=>cmpColor(c.three[k].color, realColor(c))==="맞음").length}; });
+  const outs = all.filter(c=>c.out&&c.out.on), why = OUTWHY.map(w=>[w, outs.filter(c=>c.out.why===w).length]).filter(x=>x[1]);
+  const line = `전체 ${all.length}건 · 연습 ${all.filter(c=>c.kind==="연습").length} · 뺌 ${outs.length}${why.length?" ("+why.map(x=>x[0]+" "+x[1]).join(" · ")+")":""} · 성적표 ${C.length}건 중 실제 적힘 ${R.length}건`;
+  return {pct, u:U.length, hit:cnt("맞음"), light:cnt("가볍게 봄"), over:cnt("과함"), h:H.length, healOk:H.filter(c=>healCmp(c)==="맞음").length, ai, line,
+    same: C.filter(c=>threeCols(c).length>=2 && new Set(threeCols(c)).size===1).length, diff: C.filter(c=>new Set(threeCols(c)).size===3).length};
+}
+function setUrg(id, v){ const c = cs(id); c.real.urgent = c.real.urgent === v ? "" : v; const m = cmpColor(c.ai.color, realColor(c)); c.score.urgent = m === "맞음" ? 40 : m === "과함" ? 20 : m === "가볍게 봄" ? 0 : ""; if(m === "가볍게 봄" && c.wrong === "(없음)") c.wrong = "가볍게 봄"; save(); drawTop(); drawWallReport(); }
+function setPick(id, k, v){ const c = cs(id); c.score[k] = c.score[k] === v ? "" : v; save(); drawTop(); drawWallReport(); }
+function setRealPick(id, k, v){ const c = cs(id); c.real[k] = c.real[k] === v ? "" : v; save(); drawWallReport(); }
+function setKind(id, v){ cs(id).kind = v; save(); drawTop(); drawWallReport(); }
+function setOut(id, on, why){ const c = cs(id); c.out = {on, why: on ? (why || (c.out && c.out.why) || "장난") : ""}; save(); drawTop(); drawWallReport(); }
+function copySelQ(){   // ⑦ AI 선별 질문 글 — 사례 번호 · 칩 · 학생 말 · 되묻기 답만 (예측 맞고 틀림 · 이름 없음)
+  const L = D.cases.filter(c=>c.kind!=="연습").map(c=>`사례 ${c.id} : 부위 ${partLabel(c)} · 칩 ${(c.spots||[]).map(x=>[...x.how,...x.since].join(", ")).filter(Boolean).join(" / ")||"없음"} · 학생 말 "${String(c.text||"").replace(/\s+/g," ")||"없음"}" · 되묻기 ${(c.qa||[]).filter(x=>x.a).map(x=>x.q+" → "+x.a).join(" ; ")||"안 함"} · 저장까지 ${c.secs?c.secs+"초":"모름"}`);
+  if(!L.length) return toast("고를 사례가 없어요");
+  copy(`너는 고등학교 동아리 탐구의 자료 정리 도우미야. 아래는 친구들이 «메타버스 보건실» 앱에 남긴 아픈 사례야.\n진짜로 아팠던 일을 성의 있게 적었는지만 봐 줘. 장난 · 지어낸 것 · 아무렇게나 누른 것이면 «의심» 이야. (AI 예측이 맞았는지는 보지 마)\n[답 꼴] 사례마다 한 줄 : 사례 번호 : 성의 또는 의심 — 까닭 (짧게)\n[사례]\n` + L.join("\n"), "선별 질문 글을 복사했어요 — AI 창에 붙여 넣어요");
+}
+function readSel(){
+  const t = $("selIn").value; if(!t.trim()) return toast("AI 가 쓴 선별 답을 붙여 넣어요");
+  if(/\[답 꼴|자료 정리 도우미/.test(t)){ $("selIn").classList.add("bad"); return toast("이건 질문 글이에요 — AI 창에 보내고, AI 가 쓴 답을 붙여 넣어요"); }
+  let n = 0; t.split(/\n/).forEach(l => { const m = l.match(/사례\s*(\d+)\s*[:：]?\s*(성의|의심)\s*(?:[—–\-:]\s*)?(.*)/); if(!m) return; const c = cs(+m[1]); if(!c) return; c.aiFlag = {v:m[2], why:m[3].trim().slice(0,60)}; n++; });
+  save(); drawWall(); toast(n ? n + "건 읽었어요 — ⚠ 딱지를 보고 사람이 빼요" : "사례 줄을 못 찾았어요 — 「사례 3 : 의심 — 까닭」 꼴인지 봐요");
 }
 function threeCols(c){ return ["gpt","gemini","claude"].map(k=>c.three[k]&&c.three[k].color).filter(Boolean); }
 function selColor(id, who, v){ return `<select style="max-width:110px" onchange="setThree(${id},'${who}','color',this.value)"><option value="">색</option>${COLORS.map(c=>`<option${v===c?" selected":""}>${c}</option>`).join("")}</select>`; }
@@ -1506,13 +1638,19 @@ function setScore(id,k,v,max){ const c = cs(id); if(v===""){ c.score[k] = ""; } 
 function drawWallReport(){ const keep = document.activeElement; const sc = $("posters").parentElement.scrollTop; drawWall(); $("posters").parentElement.scrollTop = sc; if(keep && keep.id) $(keep.id)?.focus(); }
 function setField(id,k,v){ cs(id)[k] = v; save(); if(k==="wrong") drawWallReport(); }
 function delCase(id){ if(!confirm("사례 "+id+"번을 지울까요? 번호는 다시 쓰지 않아요")) return; D.cases = D.cases.filter(c=>c.id!==id); selCase = null; save(); drawTop(); drawWall(); }
-function copyTable(){
-  const h = ["사례","부위","답한 AI","AI 색","AI 예상","실제 진단","GPT 색","제미나이 색","클로드 색","진단 40","긴급 40","대처 20","총점","틀린 이유","메모"];
-  const rows = D.cases.map(c=>[c.id,partLabel(c),c.ai.model,c.ai.color,c.ai.diag,c.real.diag,c.three.gpt.color,c.three.gemini.color,c.three.claude.color,c.score.diag,c.score.urgent,c.score.care,total(c)??"",c.wrong==="(없음)"?"":c.wrong,c.memo].map(x=>String(x??"").replace(/\t|\n/g," ")).join("\t"));
-  copy([h.join("\t"), ...rows, ["평균","","","","","","","","","","","",average()??"","",""].join("\t")].join("\n"), "표를 복사했어요 — 한글 · 엑셀에 붙여 넣어요");
+function copyTable(){   // v1.2 — 진짜 · 안 뺀 사례만 · 누구 · 실제 긴급 · 판정 · 나은 때
+  const h = ["사례","누구","부위","답한 AI","AI 색","AI 예상","실제 긴급","긴급도","병원 간 때","실제 나은 때","경과","실제 진단","GPT 색","제미나이 색","클로드 색","진단 40","긴급 40","대처 20","총점","틀린 이유","메모"];
+  const rows = D.cases.filter(counted).map(c=>[c.id,c.who,partLabel(c),c.ai.model,c.ai.color,c.ai.diag,c.real.urgent,cmpColor(c.ai.color,realColor(c)),c.real.hospital,c.real.heal,healCmp(c),c.real.diag,c.three.gpt.color,c.three.gemini.color,c.three.claude.color,c.score.diag,c.score.urgent,c.score.care,total(c)??"",c.wrong==="(없음)"?"":c.wrong,c.memo].map(x=>String(x??"").replace(/\t|\n/g," ")).join("\t"));
+  copy([h.join("\t"), ...rows, ["평균"].concat(Array(17).fill("")).concat([average()??"","",""]).join("\t")].join("\n"), "표를 복사했어요 (연습 · 뺀 사례 빼고) — 한글 · 엑셀에 붙여 넣어요");
+}
+function copySummary(){   // v1.2 ⑧ 보고서용 요약 표
+  const st = stats();
+  copy(["항목\t값", "사례\t" + st.line, "긴급도 맞힘\t" + st.pct(st.hit, st.u), "가볍게 봄\t" + st.light + "건", "과함\t" + st.over + "건", "경과(나은 때) 맞힘\t" + st.pct(st.healOk, st.h), ...st.ai.map(a => a.n + " 긴급도 맞힘\t" + st.pct(a.ok, a.all)), "평균 총점\t" + (average() ?? "—")].join("\n"), "요약 표를 복사했어요 — 보고서에 붙여 넣어요");
 }
 function exportJson(){ const d = {app:"메타버스 보건실", ver:VER, at:new Date().toISOString(), nick:D.settings.nick, nextId:D.nextId, cases:D.cases}; const b = new Blob([JSON.stringify(d,null,1)],{type:"application/json"}); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = "보건실_사례_"+new Date().toISOString().slice(0,10)+".json"; a.click(); toast("파일로 저장했어요 (열쇠는 안 들어가요)"); }
-function importJson(inp){ const f = inp.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try{ const d = JSON.parse(r.result); if(!Array.isArray(d.cases)) throw 0; let n = 0; d.cases.forEach(c=>{ if(!D.cases.some(x=>x.id===c.id)){ D.cases.push(c); n++; } }); D.nextId = Math.max(D.nextId, ...D.cases.map(c=>c.id+1)); save(); drawTop(); toast(n+"건 불러왔어요 (같은 번호는 건너뜀)"); }catch(e){ toast("파일을 못 읽었어요"); } inp.value = ""; }; r.readAsText(f); }
+function importJson(inp){ const f = inp.files[0]; if(!f) return; const r = new FileReader(); r.onload = () => { try{ const d = JSON.parse(r.result); if(!Array.isArray(d.cases)) throw 0; let n = 0, skip = 0;
+  d.cases.forEach(c => { fixCase(c, d.nick || "?"); if(D.cases.some(x => x.made && x.made === c.made && (x.who || "") === c.who)){ skip++; return; } c.origId = c.origId || c.id; c.id = D.nextId++; D.cases.push(c); n++; });   // v1.2 ⑥ — 부원마다 1번부터라 번호로 거르면 둘째 부원 사례가 버려짐
+  save(); drawTop(); if(page === 5) drawWall(); toast((n ? n + "건 불러왔어요 · 새 번호를 붙였어요" : "새 사례가 없어요") + (skip ? " · 이미 있는 " + skip + "건은 건너뜀" : "")); }catch(e){ toast("파일을 못 읽었어요"); } inp.value = ""; }; r.readAsText(f); }
 function eraseAll(){ if(!confirm("사례를 모두 지울까요? 번호는 이어서 붙어요")) return; D.cases = []; save(); drawTop(); toast("모두 지웠어요"); }
 
 /* 설정 */
